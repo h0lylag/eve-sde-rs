@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - ""
+          - "--no-default-features"
+          - "--no-default-features --features download"
+          - "--all-features"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
+      - run: cargo test ${{ matrix.features }}
