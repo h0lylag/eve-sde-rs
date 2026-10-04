@@ -1,40 +1,56 @@
 # eve-sde
 
-Load EVE Online's Static Data Export (SDE) and look things up in it.
+Load EVE Online's Static Data Export (SDE), look stuff up in it, and keep
+your local copy fresh.
 
 ```toml
+[dependencies]
 eve-sde = { path = "../eve-sde-rs" }
 ```
+
+## Look things up
 
 ```rust
 let sde = eve_sde::Sde::load("sde.zip")?;
 
-sde.type_id("Tritanium");                  // Some(34)
-sde.system_id("Jita");                     // Some(30000142)
-sde.neighbors(30000142);                   // systems one gate away
-sde.name(60003760);                        // name of any station, planet, gate, ...
-sde.attribute_named(587, "hiSlots");       // Some(3.0)
+sde.type_id("Tritanium");             // Some(34)
+sde.system_id("Jita");                // Some(30000142)
+sde.neighbors(30000142);              // systems one gate away
+sde.name(60003760);                   // name of any station, planet, gate, ...
+sde.attribute_named(587, "hiSlots");  // Some(3.0)
 ```
 
-Try `cargo run --release --example type_name -- sde.zip 587 Rifter`.
+Each table has a read-only accessor (`sde.types()`, `sde.solar_systems()`,
+etc). Tables and their lookup indexes are locked in once loading is done, so
+you can't accidentally mutate one half of the SDE out of sync with the rest.
 
-Each SDE table has a read-only accessor (`sde.types()`, `sde.solar_systems()`, ...).
-Table data and lookup indexes stay fixed after loading.
-Replace field access such as `sde.types[&34]` with `sde.types()[&34]`.
-Get the ZIP from <https://developers.eveonline.com/static-data/>, or enable the
-`download` feature and call `eve_sde::download::Client::update`.
-
-Rust 1.89 or later is required. Updates preserve newer builds installed by
-concurrent updates. Writers use a persistent `.<filename>.lock` file beside the
-archive. Do not delete that file while any writer can use it. An explicit
-`Client::download` request can replace a newer build with the requested build.
-
-Metadata and individual table records have a 1 MiB limit. The total decompressed
-archive has a 2 GiB limit. Oversized input returns `Error::LimitExceeded`.
+Try it out on a real file:
 
 ```sh
-cargo test --all-features
-EVE_SDE_ZIP=sde.zip cargo test --release -- --ignored   # against a real SDE
+cargo run --release --example lookup -- sde.zip Jita
+cargo run --release --example type_name -- sde.zip 587 Rifter
 ```
 
-EVE Online is a trademark of Fenris Creations.
+## Get the SDE
+
+Grab it by hand from <https://developers.eveonline.com/static-data/>, or
+turn on the `download` feature and let the crate handle it for you:
+
+```rust
+use eve_sde::download::Client;
+
+let client = Client::new("my-app/1.0 (me@example.com)");
+client.update("sde.zip")?; // only downloads if there's a newer build
+```
+
+`update` won't ever replace a newer build with an older one, even if two
+processes race to write the same file at the same time.
+
+```sh
+cargo run --release --features download --example update -- sde.zip
+```
+
+## ID ranges
+
+`eve_sde::ids::kind(id)` tells you what kind of thing an ID is (type,
+system, station, player-owned, whatever) just from its numeric range.

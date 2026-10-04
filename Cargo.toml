@@ -3,7 +3,7 @@ name = "eve-sde"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.89"
-description = "Load EVE Online's Static Data Export and look things up in it"
+description = "Manage EVE Online SDE data"
 license = "MIT"
 readme = "README.md"
 keywords = ["eve-online", "sde", "static-data"]
@@ -11,9 +11,7 @@ categories = ["parser-implementations", "game-development"]
 
 [features]
 default = ["load"]
-# Read the SDE ZIP into memory and query it.
 load = ["dep:zip", "dep:serde", "dep:serde_json"]
-# Check for new SDE builds and download them.
 download = ["dep:ureq", "dep:zip", "dep:serde", "dep:serde_json"]
 
 [dependencies]
