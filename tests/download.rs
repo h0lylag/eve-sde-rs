@@ -2,8 +2,8 @@
 mod common;
 
 use common::{build_line, build_only_zip, stored_zip_bytes};
-use eve_sde::download::{Client, Latest, Update, local_build};
-use eve_sde::{BuildInfo, Error};
+use eve_sde::Error;
+use eve_sde::download::{Client, Latest, MAX_DOWNLOAD_BYTES, Update, local_build};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpListener;
@@ -231,10 +231,12 @@ fn corrupt_download_leaves_old_file_alone() {
     broken[at] = b'y';
     let client = client(&release_server(2, vec![(2, broken)]));
 
+    let err = client
+        .download(2, &dest, |_, _| ControlFlow::Continue(()))
+        .unwrap_err();
     assert!(
-        client
-            .download(2, &dest, |_, _| ControlFlow::Continue(()))
-            .is_err()
+        matches!(&err, Error::Read { file, .. } if file == "types.jsonl"),
+        "{err:?}"
     );
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 1);
     assert_eq!(only_file(dir.path()), ["sde.zip"]);
@@ -296,8 +298,30 @@ fn oversized_download_is_refused() {
     let err = client(&base)
         .download(2, &dest, |_, _| ControlFlow::Continue(()))
         .unwrap_err();
-    assert!(matches!(err, Error::TooLarge { .. }), "{err}");
+    assert!(
+        matches!(&err, Error::LimitExceeded { resource, limit }
+            if resource == "download" && *limit == MAX_DOWNLOAD_BYTES),
+        "{err}"
+    );
     assert!(only_file(dir.path()).is_empty());
+}
+
+#[test]
+fn missing_folder_error_names_the_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let dest = dir.path().join("missing").join("sde.zip");
+    let client = client(&release_server(2, vec![(2, build_only_zip(2))]));
+    let err = client
+        .download(2, &dest, |_, _| ControlFlow::Continue(()))
+        .unwrap_err();
+    let Error::Io(io) = &err else {
+        panic!("{err:?}");
+    };
+    assert_eq!(io.kind(), std::io::ErrorKind::NotFound);
+    let message = err.to_string();
+    assert!(message.starts_with("cannot create `"), "{message}");
+    assert!(message.contains("missing"), "{message}");
+    assert!(std::error::Error::source(&err).is_some());
 }
 
 #[test]
@@ -348,11 +372,9 @@ fn local_build_reads_only_the_build() {
     let path = dir.path().join("sde.zip");
     assert_eq!(local_build(&path).unwrap(), None);
     std::fs::write(&path, build_only_zip(12)).unwrap();
-    let want = BuildInfo {
-        build_number: 12,
-        release_date: Some("2026-10-02T11:08:57Z".into()),
-    };
-    assert_eq!(local_build(&path).unwrap(), Some(want));
+    let build = local_build(&path).unwrap().unwrap();
+    assert_eq!(build.build_number, 12);
+    assert_eq!(build.release_date.as_deref(), Some("2026-10-02T11:08:57Z"));
     std::fs::write(&path, "garbage").unwrap();
     assert!(local_build(&path).is_err());
 }

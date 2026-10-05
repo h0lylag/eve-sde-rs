@@ -1,5 +1,5 @@
 use crate::archive::{Archive, BuildInfo, Record};
-use crate::error::Result;
+use crate::error::{PathContext, Result};
 use crate::lookup::Index;
 use crate::model::*;
 use std::collections::HashMap;
@@ -188,7 +188,9 @@ impl Sde {
     /// Read and index an SDE ZIP from disk. Takes a couple of seconds and a
     /// few hundred MB of memory; load once and share the result.
     pub fn load(path: impl AsRef<Path>) -> Result<Sde> {
-        Sde::from_reader(BufReader::new(File::open(path)?))
+        let path = path.as_ref();
+        let file = File::open(path).path_context("open", path)?;
+        Sde::from_reader(BufReader::new(file))
     }
 
     /// Read and index an SDE ZIP already in memory.

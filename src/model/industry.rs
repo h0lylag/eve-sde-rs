@@ -5,6 +5,7 @@ use super::*;
 /// `blueprints.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Blueprint {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -17,6 +18,7 @@ record!(Blueprint, "blueprints.jsonl");
 
 /// What a blueprint can do. Missing means it can't.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct BlueprintActivities {
     pub manufacturing: Option<Activity>,
     pub reaction: Option<Activity>,
@@ -28,6 +30,7 @@ pub struct BlueprintActivities {
 
 /// Time in seconds, inputs and outputs of one blueprint activity.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct Activity {
     #[serde(default)]
     pub time: i64,
@@ -40,6 +43,7 @@ pub struct Activity {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct Product {
     #[serde(rename = "typeID")]
     pub type_id: u32,
@@ -50,6 +54,7 @@ pub struct Product {
 
 /// `industryActivities.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct IndustryActivity {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -61,6 +66,7 @@ record!(IndustryActivity, "industryActivities.jsonl");
 /// `industryAssemblyLines.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct IndustryAssemblyLine {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -82,6 +88,7 @@ record!(IndustryAssemblyLine, "industryAssemblyLines.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct GroupMultipliers {
     #[serde(rename = "groupID")]
     pub group_id: u32,
@@ -92,6 +99,7 @@ pub struct GroupMultipliers {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CategoryMultipliers {
     #[serde(rename = "categoryID")]
     pub category_id: u32,
@@ -102,6 +110,7 @@ pub struct CategoryMultipliers {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TypeListMultipliers {
     #[serde(rename = "typeListID")]
     pub type_list_id: u32,
@@ -113,6 +122,7 @@ pub struct TypeListMultipliers {
 /// `industryInstallationTypes.jsonl`: which assembly lines a structure type has.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct IndustryInstallationType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -121,6 +131,7 @@ pub struct IndustryInstallationType {
 record!(IndustryInstallationType, "industryInstallationTypes.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct AssemblyLineRef {
     #[serde(rename = "assemblyLineID")]
     pub assembly_line_id: u32,
@@ -130,6 +141,7 @@ pub struct AssemblyLineRef {
 /// cost, time or material use. Section names are camelCase in this file.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct IndustryModifierSource {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -143,6 +155,7 @@ pub struct IndustryModifierSource {
 record!(IndustryModifierSource, "industryModifierSources.jsonl");
 
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct ModifierSection {
     #[serde(default)]
     pub cost: Vec<ModifierAttribute>,
@@ -153,6 +166,7 @@ pub struct ModifierSection {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct ModifierAttribute {
     #[serde(rename = "dogmaAttributeID")]
     pub attribute_id: u32,
@@ -162,6 +176,7 @@ pub struct ModifierAttribute {
 
 /// `industryTargetFilters.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct IndustryTargetFilter {
     #[serde(rename = "_key")]
     pub id: u32,

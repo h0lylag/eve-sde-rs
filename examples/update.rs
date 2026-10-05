@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some(from) => println!("updated {path}: build {from} -> {to}"),
             None => println!("downloaded build {to} to {path}"),
         },
+        other => println!("{path}: {other:?}"),
     }
     Ok(())
 }

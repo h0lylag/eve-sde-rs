@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 /// `icons.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Icon {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -17,6 +18,7 @@ record!(Icon, "icons.jsonl");
 /// `graphics.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Graphic {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -35,6 +37,7 @@ record!(Graphic, "graphics.jsonl");
 /// `graphicMaterialSets.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct GraphicMaterialSet {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -59,6 +62,7 @@ record!(GraphicMaterialSet, "graphicMaterialSets.jsonl");
 /// `skins.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Skin {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -79,6 +83,7 @@ record!(Skin, "skins.jsonl");
 /// `skinLicenses.jsonl`: the item you buy to get a SKIN.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkinLicense {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -96,6 +101,7 @@ record!(SkinLicense, "skinLicenses.jsonl");
 /// `skinMaterials.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkinMaterial {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -108,6 +114,7 @@ record!(SkinMaterial, "skinMaterials.jsonl");
 
 /// `skinrComponentCategories.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrComponentCategory {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -117,6 +124,7 @@ record!(SkinrComponentCategory, "skinrComponentCategories.jsonl");
 
 /// `skinrComponentPointValues.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrComponentPointValues {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -127,6 +135,7 @@ record!(SkinrComponentPointValues, "skinrComponentPointValues.jsonl");
 
 /// `skinrComponentRarities.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrComponentRarity {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -139,6 +148,7 @@ record!(SkinrComponentRarity, "skinrComponentRarities.jsonl");
 /// `skinrComponents.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkinrComponent {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -160,6 +170,7 @@ record!(SkinrComponent, "skinrComponents.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AssociatedType {
     #[serde(rename = "typeID")]
     pub type_id: u32,
@@ -168,6 +179,7 @@ pub struct AssociatedType {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SequenceBinder {
     #[serde(rename = "itemTypeID")]
     pub item_type_id: u32,
@@ -176,6 +188,7 @@ pub struct SequenceBinder {
 
 /// `skinrSlotCategories.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrSlotCategory {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -186,6 +199,7 @@ record!(SkinrSlotCategory, "skinrSlotCategories.jsonl");
 /// `skinrSlotConfigurations.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkinrSlotConfiguration {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -202,6 +216,7 @@ record!(SkinrSlotConfiguration, "skinrSlotConfigurations.jsonl");
 
 /// `skinrSlotNames.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrSlotName {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -212,6 +227,7 @@ record!(SkinrSlotName, "skinrSlotNames.jsonl");
 /// `skinrSlots.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkinrSlot {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -224,6 +240,7 @@ record!(SkinrSlot, "skinrSlots.jsonl");
 
 /// `skinrSlotsToMaterials.jsonl`: per faction (the key).
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrSlotsToMaterials {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -233,6 +250,7 @@ pub struct SkinrSlotsToMaterials {
 record!(SkinrSlotsToMaterials, "skinrSlotsToMaterials.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct SlotMaterial {
     #[serde(rename = "slotID")]
     pub slot_id: u32,
@@ -242,6 +260,7 @@ pub struct SlotMaterial {
 
 /// `skinrTierThresholds.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SkinrTierThreshold {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -252,6 +271,7 @@ record!(SkinrTierThreshold, "skinrTierThresholds.jsonl");
 
 /// `shipTreeElements.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct ShipTreeElement {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -265,6 +285,7 @@ record!(ShipTreeElement, "shipTreeElements.jsonl");
 
 /// `shipTreeFactions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct ShipTreeFaction {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -279,6 +300,7 @@ record!(ShipTreeFaction, "shipTreeFactions.jsonl");
 /// `shipTreeGroups.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ShipTreeGroup {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -299,6 +321,7 @@ pub struct ShipTreeGroup {
 record!(ShipTreeGroup, "shipTreeGroups.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct FactionPrereqs {
     #[serde(rename = "_key")]
     pub faction_id: u32,
@@ -306,6 +329,7 @@ pub struct FactionPrereqs {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct PrereqSkill {
     #[serde(rename = "_key")]
     pub type_id: u32,

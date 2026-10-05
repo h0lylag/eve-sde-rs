@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 /// `npcStations.jsonl`. The file has no names; see `Sde::station_name`.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct NpcStation {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -34,6 +35,7 @@ record!(NpcStation, "npcStations.jsonl");
 /// `npcCorporations.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct NpcCorporation {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -94,6 +96,7 @@ record!(NpcCorporation, "npcCorporations.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CorporationDivision {
     #[serde(rename = "_key")]
     pub division_id: u32,
@@ -106,6 +109,7 @@ pub struct CorporationDivision {
 /// `npcCorporationDivisions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct NpcCorporationDivision {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -123,6 +127,7 @@ record!(NpcCorporationDivision, "npcCorporationDivisions.jsonl");
 /// `npcCharacters.jsonl`: agents, corporation CEOs and other NPCs.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct NpcCharacter {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -157,6 +162,7 @@ pub struct NpcCharacter {
 record!(NpcCharacter, "npcCharacters.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct NpcSkill {
     #[serde(rename = "typeID")]
     pub type_id: u32,
@@ -164,6 +170,7 @@ pub struct NpcSkill {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Agent {
     #[serde(rename = "agentTypeID")]
     pub agent_type_id: u32,
@@ -175,6 +182,7 @@ pub struct Agent {
 
 /// `agentTypes.jsonl`. `name` is CCP's internal name, e.g. `BasicAgent`.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct AgentType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -185,6 +193,7 @@ record!(AgentType, "agentTypes.jsonl");
 /// `agentsInSpace.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AgentInSpace {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -202,6 +211,7 @@ record!(AgentInSpace, "agentsInSpace.jsonl");
 /// `factions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Faction {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -231,6 +241,7 @@ record!(Faction, "factions.jsonl");
 /// `stationOperations.jsonl`: the "Assembly Plant" part of a station's name.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct StationOperation {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -258,6 +269,7 @@ record!(StationOperation, "stationOperations.jsonl");
 /// `stationServices.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct StationService {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -270,6 +282,7 @@ record!(StationService, "stationServices.jsonl");
 
 /// `stationStandingsRestrictions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct StationStandingsRestriction {
     #[serde(rename = "_key")]
     pub id: u32,

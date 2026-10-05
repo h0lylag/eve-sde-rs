@@ -6,6 +6,7 @@ use crate::model::{SolarSystem, Stargate};
 
 /// What sort of space a system is in, from its ID range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SpaceKind {
     /// The gated universe, including Pochven, Zarzakh and the systems that no
     /// gate reaches.
@@ -18,6 +19,7 @@ pub enum SpaceKind {
 
 /// High, low or null security, as the game groups systems.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SecurityBand {
     High,
     Low,

@@ -12,9 +12,9 @@ use std::collections::hash_map::Entry;
 use std::fmt::Debug;
 #[cfg(feature = "load")]
 use std::hash::Hash;
+use std::io::{self, Read, Seek};
 #[cfg(feature = "load")]
 use std::io::{BufRead, BufReader};
-use std::io::{Read, Seek};
 use zip::ZipArchive;
 use zip::read::ZipFile;
 use zip::result::ZipError;
@@ -29,7 +29,7 @@ pub const MAX_RECORD_BYTES: u64 = 1024 * 1024;
 /// Maximum total size of decompressed archive entries: 2 GiB.
 pub const MAX_ARCHIVE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 
-fn limit_error(resource: impl Into<String>, limit: u64) -> Error {
+pub(crate) fn limit_error(resource: impl Into<String>, limit: u64) -> Error {
     Error::LimitExceeded {
         resource: resource.into(),
         limit,
@@ -37,11 +37,16 @@ fn limit_error(resource: impl Into<String>, limit: u64) -> Error {
 }
 
 /// Bound actual output even if the ZIP or HTTP headers understate its size.
-pub(crate) fn read_metadata(reader: impl Read) -> Result<String> {
+/// `read_error` turns a failed read into the caller's error.
+pub(crate) fn read_metadata(
+    reader: impl Read,
+    read_error: impl FnOnce(io::Error) -> Error,
+) -> Result<String> {
     let mut text = String::new();
     reader
         .take(MAX_METADATA_BYTES + 1)
-        .read_to_string(&mut text)?;
+        .read_to_string(&mut text)
+        .map_err(read_error)?;
     if text.len() as u64 > MAX_METADATA_BYTES {
         return Err(limit_error("build metadata", MAX_METADATA_BYTES));
     }
@@ -51,6 +56,7 @@ pub(crate) fn read_metadata(reader: impl Read) -> Result<String> {
 /// Which SDE build an archive holds, from its `_sde.jsonl`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct BuildInfo {
     pub build_number: u32,
     /// ISO 8601 timestamp, e.g. `2026-10-02T11:08:57Z`.
@@ -117,7 +123,7 @@ impl<R: Read + Seek> Archive<R> {
                 return Err(limit_error("build metadata", MAX_METADATA_BYTES));
             }
         }
-        let text = read_metadata(open(&mut zip, BUILD_FILE)?)?;
+        let text = read_metadata(open(&mut zip, BUILD_FILE)?, |e| Error::read(BUILD_FILE, e))?;
         // Recount actual bytes during reads. ZIP sizes are untrusted.
         let remaining = max_bytes
             .checked_sub(text.len() as u64)
@@ -156,7 +162,8 @@ impl<R: Read + Seek> Archive<R> {
             line.clear();
             let bytes = (&mut reader)
                 .take(MAX_RECORD_BYTES.min(self.remaining) + 1)
-                .read_line(&mut line)? as u64;
+                .read_line(&mut line)
+                .map_err(|e| Error::read(T::FILE, e))? as u64;
             if bytes == 0 {
                 break;
             }
@@ -199,8 +206,9 @@ impl<R: Read + Seek> Archive<R> {
     pub fn verify(&mut self) -> Result<()> {
         let mut remaining = self.max_bytes;
         for i in 0..self.zip.len() {
-            let file = self.zip.by_index(i).map_err(Error::zip)?;
-            let bytes = std::io::copy(&mut file.take(remaining + 1), &mut std::io::sink())?;
+            let mut file = self.zip.by_index(i).map_err(Error::zip)?;
+            let copied = io::copy(&mut (&mut file).take(remaining + 1), &mut io::sink());
+            let bytes = copied.map_err(|e| Error::read(file.name(), e))?;
             remaining = remaining
                 .checked_sub(bytes)
                 .ok_or_else(|| limit_error("decompressed archive", self.max_bytes))?;

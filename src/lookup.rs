@@ -157,6 +157,7 @@ name_lookups! {
 
 /// The kind of fitting slot a module needs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Slot {
     High,
     Mid,
@@ -168,6 +169,7 @@ pub enum Slot {
 
 /// Whether a module needs a turret or launcher hardpoint.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Hardpoint {
     Turret,
     Launcher,

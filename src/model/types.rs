@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 /// `types.jsonl`: every item, ship, skill, blueprint and so on.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Type {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -60,6 +61,7 @@ record!(Type, "types.jsonl");
 /// `groups.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Group {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -80,6 +82,7 @@ record!(Group, "groups.jsonl");
 /// `categories.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Category {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -94,6 +97,7 @@ record!(Category, "categories.jsonl");
 /// `marketGroups.jsonl`: the market's tree of folders.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MarketGroup {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -113,6 +117,7 @@ record!(MarketGroup, "marketGroups.jsonl");
 /// `metaGroups.jsonl`: Tech 1, Tech 2, Faction, Officer and so on.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MetaGroup {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -130,6 +135,7 @@ record!(MetaGroup, "metaGroups.jsonl");
 /// `typeDogma.jsonl`: attribute values and effects of one type.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TypeDogma {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -141,6 +147,7 @@ pub struct TypeDogma {
 record!(TypeDogma, "typeDogma.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct TypeAttribute {
     #[serde(rename = "attributeID")]
     pub attribute_id: u32,
@@ -148,6 +155,7 @@ pub struct TypeAttribute {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct TypeEffect {
     #[serde(rename = "effectID")]
     pub effect_id: u32,
@@ -158,6 +166,7 @@ pub struct TypeEffect {
 /// `typeMaterials.jsonl`: what reprocessing a type gives.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TypeMaterials {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -170,6 +179,7 @@ record!(TypeMaterials, "typeMaterials.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Material {
     #[serde(rename = "materialTypeID")]
     pub material_type_id: u32,
@@ -178,6 +188,7 @@ pub struct Material {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct RandomMaterial {
     #[serde(rename = "materialTypeID")]
     pub material_type_id: u32,
@@ -188,6 +199,7 @@ pub struct RandomMaterial {
 /// `typeBonus.jsonl`: the bonus lines shown on a ship's info window.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TypeBonuses {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -205,6 +217,7 @@ record!(TypeBonuses, "typeBonus.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Bonus {
     pub bonus: Option<f64>,
     #[serde(deserialize_with = "de::en")]
@@ -217,6 +230,7 @@ pub struct Bonus {
 
 /// `typeElements.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct TypeElement {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -228,6 +242,7 @@ record!(TypeElement, "typeElements.jsonl");
 /// `typeLists.jsonl`: named sets of types, groups and categories.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TypeList {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -253,6 +268,7 @@ record!(TypeList, "typeLists.jsonl");
 
 /// `compressibleTypes.jsonl`: ore → compressed ore.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct CompressibleType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -264,6 +280,7 @@ record!(CompressibleType, "compressibleTypes.jsonl");
 /// `dynamicItemAttributes.jsonl`: how mutaplasmids change an item.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DynamicItemAttributes {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -275,6 +292,7 @@ record!(DynamicItemAttributes, "dynamicItemAttributes.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DynamicAttribute {
     #[serde(rename = "_key")]
     pub attribute_id: u32,
@@ -285,6 +303,7 @@ pub struct DynamicAttribute {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DynamicMapping {
     pub applicable_types: Vec<u32>,
     pub resulting_type: u32,
@@ -292,6 +311,7 @@ pub struct DynamicMapping {
 
 /// `masteries.jsonl`: certificates needed per mastery level, by ship type.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct Mastery {
     #[serde(rename = "_key")]
     pub id: u32,

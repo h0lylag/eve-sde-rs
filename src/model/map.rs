@@ -6,6 +6,7 @@ use crate::de;
 /// `mapRegions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Region {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -28,6 +29,7 @@ record!(Region, "mapRegions.jsonl");
 /// `mapConstellations.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Constellation {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -49,6 +51,7 @@ record!(Constellation, "mapConstellations.jsonl");
 /// `Sde::neighbors` for the joined view.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SolarSystem {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -98,6 +101,7 @@ record!(SolarSystem, "mapSolarSystems.jsonl");
 /// `mapStargates.jsonl`. Each gate pair has one record per end.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Stargate {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -111,6 +115,7 @@ pub struct Stargate {
 record!(Stargate, "mapStargates.jsonl");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[non_exhaustive]
 pub struct GateDestination {
     #[serde(rename = "solarSystemID")]
     pub solar_system_id: u32,
@@ -121,6 +126,7 @@ pub struct GateDestination {
 /// `mapStars.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Star {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -135,6 +141,7 @@ record!(Star, "mapStars.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct StarStatistics {
     pub age: f64,
     pub life: f64,
@@ -146,6 +153,7 @@ pub struct StarStatistics {
 /// Physical numbers shared by planets, moons and asteroid belts.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CelestialStatistics {
     pub density: f64,
     pub eccentricity: f64,
@@ -165,6 +173,7 @@ pub struct CelestialStatistics {
 /// Rendering settings of a planet or moon.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CelestialAttributes {
     pub height_map1: i64,
     pub height_map2: i64,
@@ -176,6 +185,7 @@ pub struct CelestialAttributes {
 /// `mapPlanets.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Planet {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -207,6 +217,7 @@ record!(Planet, "mapPlanets.jsonl");
 /// `mapMoons.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Moon {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -235,6 +246,7 @@ record!(Moon, "mapMoons.jsonl");
 /// `mapAsteroidBelts.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AsteroidBelt {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -257,6 +269,7 @@ record!(AsteroidBelt, "mapAsteroidBelts.jsonl");
 /// `mapSecondarySuns.jsonl`: the extra sun of some wormhole systems.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SecondarySun {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -273,6 +286,7 @@ record!(SecondarySun, "mapSecondarySuns.jsonl");
 /// `landmarks.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Landmark {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -290,6 +304,7 @@ record!(Landmark, "landmarks.jsonl");
 
 /// `planetResources.jsonl`: what a planet offers for sovereignty upgrades.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct PlanetResource {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -301,6 +316,7 @@ record!(PlanetResource, "planetResources.jsonl");
 
 /// Field names are snake_case in the source file.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct PlanetReagent {
     pub type_id: u32,
     pub amount_per_cycle: i64,
@@ -312,6 +328,7 @@ pub struct PlanetReagent {
 /// `planetSchematics.jsonl`: planetary industry recipes.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct PlanetSchematic {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -326,6 +343,7 @@ record!(PlanetSchematic, "planetSchematics.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SchematicType {
     #[serde(rename = "_key")]
     pub type_id: u32,

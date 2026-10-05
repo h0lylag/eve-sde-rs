@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 /// `races.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Race {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -27,6 +28,7 @@ record!(Race, "races.jsonl");
 /// `bloodlines.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Bloodline {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -51,6 +53,7 @@ record!(Bloodline, "bloodlines.jsonl");
 /// `ancestries.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Ancestry {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -74,6 +77,7 @@ record!(Ancestry, "ancestries.jsonl");
 /// `schools.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct School {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -103,6 +107,7 @@ record!(School, "schools.jsonl");
 
 /// `schoolMap.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SchoolMap {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -116,6 +121,7 @@ record!(SchoolMap, "schoolMap.jsonl");
 /// `characterAttributes.jsonl`: Intelligence, Memory and so on.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CharacterAttribute {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -131,6 +137,7 @@ record!(CharacterAttribute, "characterAttributes.jsonl");
 
 /// `characterTitles.jsonl`. The key is a UUID string.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct CharacterTitle {
     #[serde(rename = "_key")]
     pub id: String,
@@ -141,6 +148,7 @@ record!(CharacterTitle, "characterTitles.jsonl", String);
 
 /// `cloneGrades.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct CloneGrade {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -152,6 +160,7 @@ record!(CloneGrade, "cloneGrades.jsonl");
 /// `certificates.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Certificate {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -169,6 +178,7 @@ record!(Certificate, "certificates.jsonl");
 
 /// Skill levels needed for each certificate grade.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct CertificateSkill {
     #[serde(rename = "_key")]
     pub type_id: u32,
@@ -182,6 +192,7 @@ pub struct CertificateSkill {
 /// `skillPlans.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SkillPlan {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -201,6 +212,7 @@ pub struct SkillPlan {
 record!(SkillPlan, "skillPlans.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct Milestone {
     #[serde(rename = "typeID")]
     pub type_id: u32,
@@ -210,6 +222,7 @@ pub struct Milestone {
 /// `expertSystems.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ExpertSystem {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -225,6 +238,7 @@ record!(ExpertSystem, "expertSystems.jsonl");
 
 /// `corporationActivities.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct CorporationActivity {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -236,6 +250,7 @@ record!(CorporationActivity, "corporationActivities.jsonl");
 /// `corporationRoles.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CorporationRole {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -252,6 +267,7 @@ record!(CorporationRole, "corporationRoles.jsonl");
 /// `corporationRoleGroups.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CorporationRoleGroup {
     #[serde(rename = "_key")]
     pub id: u32,

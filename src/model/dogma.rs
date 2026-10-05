@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 /// `dogmaAttributes.jsonl`. `name` is the internal name, e.g. `hiSlots`.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Attribute {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -42,6 +43,7 @@ record!(Attribute, "dogmaAttributes.jsonl");
 
 /// `dogmaAttributeCategories.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct AttributeCategory {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -53,6 +55,7 @@ record!(AttributeCategory, "dogmaAttributeCategories.jsonl");
 /// `dogmaEffects.jsonl`. `name` is the internal name, e.g. `hiPower`.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Effect {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -101,6 +104,7 @@ record!(Effect, "dogmaEffects.jsonl");
 /// One thing an effect changes.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ModifierInfo {
     pub domain: String,
     pub func: String,
@@ -120,6 +124,7 @@ pub struct ModifierInfo {
 /// `dogmaUnits.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DogmaUnit {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -134,6 +139,7 @@ record!(DogmaUnit, "dogmaUnits.jsonl");
 /// `dbuffCollections.jsonl`: warfare links and other area buffs.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct DynamicBuff {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -156,6 +162,7 @@ pub struct DynamicBuff {
 record!(DynamicBuff, "dbuffCollections.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct GroupModifier {
     #[serde(rename = "dogmaAttributeID")]
     pub attribute_id: u32,
@@ -164,6 +171,7 @@ pub struct GroupModifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct SkillModifier {
     #[serde(rename = "dogmaAttributeID")]
     pub attribute_id: u32,
@@ -174,6 +182,7 @@ pub struct SkillModifier {
 /// `appliedProximityEffects.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AppliedProximityEffect {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -188,6 +197,7 @@ record!(AppliedProximityEffect, "appliedProximityEffects.jsonl");
 /// `linkWithShip.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct LinkWithShip {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -213,6 +223,7 @@ record!(LinkWithShip, "linkWithShip.jsonl");
 /// `proximityTrap.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ProximityTrap {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -232,6 +243,7 @@ record!(ProximityTrap, "proximityTrap.jsonl");
 /// `systemWideEffects.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SystemWideEffect {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -247,6 +259,7 @@ record!(SystemWideEffect, "systemWideEffects.jsonl");
 /// `systemDbuffEmitters.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SystemDbuffEmitter {
     #[serde(rename = "_key")]
     pub id: u32,

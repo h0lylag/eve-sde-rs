@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 /// `missions.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Mission {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -41,6 +42,7 @@ record!(Mission, "missions.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct KillMission {
     #[serde(rename = "dungeonID")]
     pub dungeon_id: Option<u32>,
@@ -52,6 +54,7 @@ pub struct KillMission {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CourierMission {
     #[serde(rename = "objectiveTypeID")]
     pub objective_type_id: u32,
@@ -61,6 +64,7 @@ pub struct CourierMission {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MissionRewards {
     pub reward: Option<MissionReward>,
     pub bonus_reward: Option<MissionReward>,
@@ -69,6 +73,7 @@ pub struct MissionRewards {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MissionReward {
     #[serde(rename = "rewardTypeID")]
     pub reward_type_id: Option<u32>,
@@ -78,6 +83,7 @@ pub struct MissionReward {
 /// `epicArcs.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct EpicArc {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -94,6 +100,7 @@ record!(EpicArc, "epicArcs.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct EpicArcMission {
     #[serde(rename = "_key")]
     pub mission_id: u32,
@@ -108,6 +115,7 @@ pub struct EpicArcMission {
 /// `dungeons.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Dungeon {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -128,6 +136,7 @@ record!(Dungeon, "dungeons.jsonl");
 
 /// `archetypes.jsonl`: dungeon archetypes.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct Archetype {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -141,6 +150,7 @@ record!(Archetype, "archetypes.jsonl");
 /// `mercenaryTacticalOperations.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MercenaryTacticalOperation {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -162,6 +172,7 @@ record!(
 /// `militaryCampaigns.jsonl`. The key is a UUID string.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MilitaryCampaign {
     #[serde(rename = "_key")]
     pub id: String,
@@ -179,6 +190,7 @@ record!(MilitaryCampaign, "militaryCampaigns.jsonl", String);
 /// `militaryCampaignObjectives.jsonl`. The key is a UUID string.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MilitaryCampaignObjective {
     #[serde(rename = "_key")]
     pub id: String,
@@ -209,6 +221,7 @@ record!(
 );
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct Issuer {
     #[serde(rename = "corporationID")]
     pub corporation_id: Option<u32>,
@@ -218,6 +231,7 @@ pub struct Issuer {
 
 /// `freelanceJobSchemas.jsonl`: one record holding every job schema.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct FreelanceJobSchemas {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -230,6 +244,7 @@ record!(FreelanceJobSchemas, "freelanceJobSchemas.jsonl");
 /// `notificationTypes.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct NotificationType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -242,6 +257,7 @@ record!(NotificationType, "notificationTypes.jsonl");
 /// `accountingEntryTypes.jsonl`: wallet journal entry kinds.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AccountingEntryType {
     #[serde(rename = "_key")]
     pub id: u32,

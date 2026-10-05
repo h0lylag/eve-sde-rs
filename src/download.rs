@@ -11,8 +11,8 @@
 //! Writers coordinate through a persistent `.<filename>.lock` file beside
 //! the destination. Do not delete that file while any writer can use it.
 
-use crate::archive::{Archive, BuildInfo, read_metadata};
-use crate::error::{Error, Result};
+use crate::archive::{Archive, BuildInfo, limit_error, read_metadata};
+use crate::error::{Error, PathContext, Result, io_context};
 use std::ffi::OsString;
 use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Write};
@@ -38,6 +38,7 @@ const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 /// Result of asking CCP for the latest build.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Latest {
     /// The ETag you passed still matches; nothing changed.
     Unchanged,
@@ -51,6 +52,7 @@ pub enum Latest {
 
 /// Result of [`Client::update`].
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Update {
     /// The local file is already the latest build (or newer).
     UpToDate(u32),
@@ -61,7 +63,8 @@ pub enum Update {
 /// The build in a local SDE ZIP, or `None` if there is no such file. A file
 /// that exists but is not an SDE ZIP is an error.
 pub fn local_build(path: impl AsRef<Path>) -> Result<Option<BuildInfo>> {
-    match File::open(path) {
+    let path = path.as_ref();
+    match File::open(path).path_context("open", path) {
         Ok(file) => Ok(Some(Archive::new(BufReader::new(file))?.build().clone())),
         Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.into()),
@@ -121,7 +124,9 @@ impl Client {
                     .get(ETAG)
                     .and_then(|v| v.to_str().ok())
                     .map(str::to_owned);
-                let body = read_metadata(response.body_mut().as_reader())?;
+                let body = read_metadata(response.body_mut().as_reader(), |e| {
+                    io_context(e, format!("cannot read `{url}`")).into()
+                })?;
                 Ok(Latest::Available {
                     build: BuildInfo::parse(&body)?,
                     etag,
@@ -166,9 +171,7 @@ impl Client {
         }
         let total = response.body().content_length();
         if total.is_some_and(|total| total > MAX_DOWNLOAD_BYTES) {
-            return Err(Error::TooLarge {
-                limit: MAX_DOWNLOAD_BYTES,
-            });
+            return Err(limit_error("download", MAX_DOWNLOAD_BYTES));
         }
 
         let (temp, mut file) = TempFile::next_to(dest)?;
@@ -180,20 +183,19 @@ impl Client {
                 Ok(0) => break,
                 Ok(n) => n,
                 Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                Err(e) => return Err(e.into()),
+                Err(e) => return Err(io_context(e, format!("cannot read `{url}`")).into()),
             };
             written += n as u64;
             if written > MAX_DOWNLOAD_BYTES {
-                return Err(Error::TooLarge {
-                    limit: MAX_DOWNLOAD_BYTES,
-                });
+                return Err(limit_error("download", MAX_DOWNLOAD_BYTES));
             }
-            file.write_all(&buf[..n])?;
+            file.write_all(&buf[..n])
+                .path_context("write", &temp.path)?;
             if progress(written, total).is_break() {
                 return Err(Error::Cancelled);
             }
         }
-        file.sync_all()?;
+        file.sync_all().path_context("write", &temp.path)?;
         drop(file);
 
         let info = verify(&temp.path)?;
@@ -241,25 +243,29 @@ impl Client {
 /// Closing the handle releases the lock, including during unwinding.
 fn lock_destination(dest: &Path) -> io::Result<File> {
     let filename = dest.file_name().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::InvalidInput, "destination needs a file name")
+        let message = format!("destination `{}` needs a file name", dest.display());
+        io::Error::new(io::ErrorKind::InvalidInput, message)
     })?;
     let mut name = OsString::from(".");
     name.push(filename);
     name.push(".lock");
+    let path = dest.with_file_name(name);
     let file = File::options()
         .read(true)
         .write(true)
         .create(true)
         .truncate(false)
-        .open(dest.with_file_name(name))?;
-    file.lock()?;
+        .open(&path)
+        .path_context("open", &path)?;
+    file.lock().path_context("lock", &path)?;
     Ok(file)
 }
 
 /// Check the ZIP opens, has a build number, and every entry decompresses
 /// with a matching checksum.
 fn verify(path: &Path) -> Result<BuildInfo> {
-    let mut archive = Archive::new(BufReader::new(File::open(path)?))?;
+    let file = File::open(path).path_context("open", path)?;
+    let mut archive = Archive::new(BufReader::new(file))?;
     archive.verify()?;
     Ok(archive.build().clone())
 }
@@ -284,7 +290,7 @@ impl TempFile {
                 COUNT.fetch_add(1, Ordering::Relaxed)
             );
             let path = dest.with_file_name(format!(".{name}.part-{id}"));
-            match File::create_new(&path) {
+            match File::create_new(&path).path_context("create", &path) {
                 Ok(file) => return Ok((TempFile { path, keep: false }, file)),
                 Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
                 Err(e) => return Err(e),
@@ -294,7 +300,12 @@ impl TempFile {
 
     /// Move the file to `dest`, replacing what is there.
     fn persist(mut self, dest: &Path) -> io::Result<()> {
-        fs::rename(&self.path, dest)?;
+        fs::rename(&self.path, dest).map_err(|e| {
+            io_context(
+                e,
+                format!("cannot move the download to `{}`", dest.display()),
+            )
+        })?;
         self.keep = true;
         Ok(())
     }

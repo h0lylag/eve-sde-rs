@@ -20,6 +20,7 @@ pub type CorporationId = u32;
 
 /// What kind of thing an ID refers to, from its numeric range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum IdKind {
     /// Types, groups, categories and other small IDs share this range.
     Various,

@@ -6,6 +6,7 @@ use crate::de;
 /// `fighterAbilities.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct FighterAbility {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -26,6 +27,7 @@ record!(FighterAbility, "fighterAbilities.jsonl");
 /// `fighterAbilitiesByType.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct FighterAbilitiesByType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -37,6 +39,7 @@ record!(FighterAbilitiesByType, "fighterAbilitiesByType.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AbilitySlot {
     #[serde(rename = "abilityID")]
     pub ability_id: u32,
@@ -46,6 +49,7 @@ pub struct AbilitySlot {
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct AbilityCharges {
     pub charge_count: i64,
     pub rearm_time_seconds: i64,
@@ -53,6 +57,7 @@ pub struct AbilityCharges {
 
 /// `sovereigntyUpgrades.jsonl`. Field names are snake_case in the source.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct SovereigntyUpgrade {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -66,6 +71,7 @@ pub struct SovereigntyUpgrade {
 record!(SovereigntyUpgrade, "sovereigntyUpgrades.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+#[non_exhaustive]
 pub struct SovereigntyFuel {
     pub type_id: u32,
     pub hourly_upkeep: i64,
@@ -75,6 +81,7 @@ pub struct SovereigntyFuel {
 /// `metenoxMoonDrill.jsonl`
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct MetenoxMoonDrill {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -86,6 +93,7 @@ record!(MetenoxMoonDrill, "metenoxMoonDrill.jsonl");
 
 /// `controlTowerResources.jsonl`: fuel use of each control tower.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct ControlTowerResources {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -95,6 +103,7 @@ record!(ControlTowerResources, "controlTowerResources.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct TowerResource {
     #[serde(rename = "resourceTypeID")]
     pub resource_type_id: u32,
@@ -107,6 +116,7 @@ pub struct TowerResource {
 
 /// `contrabandTypes.jsonl`
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct ContrabandType {
     #[serde(rename = "_key")]
     pub id: u32,
@@ -116,6 +126,7 @@ record!(ContrabandType, "contrabandTypes.jsonl");
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ContrabandFaction {
     #[serde(rename = "_key")]
     pub faction_id: u32,
@@ -127,6 +138,7 @@ pub struct ContrabandFaction {
 
 /// `translationLanguages.jsonl`: `en`, `de`, … and their names.
 #[derive(Debug, Clone, Deserialize)]
+#[non_exhaustive]
 pub struct TranslationLanguage {
     #[serde(rename = "_key")]
     pub id: String,

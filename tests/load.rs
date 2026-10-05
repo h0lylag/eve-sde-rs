@@ -261,6 +261,46 @@ fn missing_table_names_the_file() {
 }
 
 #[test]
+fn missing_sde_file_error_names_the_path() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("sde.zip");
+    let err = Sde::load(&path).unwrap_err();
+    let Error::Io(io) = &err else {
+        panic!("{err:?}");
+    };
+    assert_eq!(io.kind(), std::io::ErrorKind::NotFound);
+    assert_eq!(err.to_string(), format!("cannot open `{}`", path.display()));
+    assert!(std::error::Error::source(&err).is_some());
+}
+
+#[test]
+fn damaged_file_error_names_the_file() {
+    let metadata = common::build_line(1);
+    let mut files = vec![("_sde.jsonl", metadata.as_str())];
+    for &name in eve_sde::modeled_files() {
+        let body = if name == "types.jsonl" { TYPES } else { "" };
+        files.push((name, body));
+    }
+    for (file, text) in [("_sde.jsonl", "buildNumber"), ("types.jsonl", "Tritanium")] {
+        // Uncompressed, so the text appears as is. Changing the case of one
+        // letter keeps the data valid but breaks its checksum.
+        let mut bytes = common::stored_zip_bytes(&files);
+        let at = bytes
+            .windows(text.len())
+            .position(|w| w == text.as_bytes())
+            .unwrap();
+        bytes[at] ^= 0x20;
+        match Sde::from_bytes(&bytes) {
+            Err(Error::Read { file: name, source }) => {
+                assert_eq!(name, file);
+                assert_eq!(source.kind(), std::io::ErrorKind::InvalidData);
+            }
+            other => panic!("{file}: {:?}", other.err()),
+        }
+    }
+}
+
+#[test]
 fn parse_error_names_file_and_line() {
     let types = format!("{}\n\nnot json\n", TYPES.lines().next().unwrap());
     let bytes = sde_zip(&[("types.jsonl", &types)], None);
