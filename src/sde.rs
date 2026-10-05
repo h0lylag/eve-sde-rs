@@ -8,8 +8,19 @@ use std::fs::File;
 use std::io::{BufReader, Cursor, Read, Seek};
 use std::path::Path;
 
+/// A table's key type: `u32` unless the table names another. Spelled out so
+/// the docs show `HashMap<u32, Type>`, not the private `Record::Id`.
+macro_rules! key {
+    () => {
+        u32
+    };
+    ($id:ty) => {
+        $id
+    };
+}
+
 macro_rules! tables {
-    ($($field:ident: $ty:ident),* $(,)?) => {
+    ($($field:ident: $ty:ident $(=> $id:ty)?),* $(,)?) => {
         /// The whole SDE in memory, English text only.
         ///
         /// Each table has a read-only accessor, such as [`Sde::types`].
@@ -29,7 +40,7 @@ macro_rules! tables {
             unmodeled: Vec<String>,
             pub(crate) index: Index,
             $(
-                pub(crate) $field: HashMap<<$ty as Record>::Id, $ty>,
+                pub(crate) $field: HashMap<key!($($id)?), $ty>,
             )*
         }
 
@@ -41,7 +52,7 @@ macro_rules! tables {
         impl Sde {
             $(
                 #[doc = concat!("Read-only records from `", stringify!($field), "`, by ID.")]
-                pub fn $field(&self) -> &HashMap<<$ty as Record>::Id, $ty> {
+                pub fn $field(&self) -> &HashMap<key!($($id)?), $ty> {
                     &self.$field
                 }
             )*
@@ -70,7 +81,7 @@ tables! {
     categories: Category,
     certificates: Certificate,
     character_attributes: CharacterAttribute,
-    character_titles: CharacterTitle,
+    character_titles: CharacterTitle => String,
     clone_grades: CloneGrade,
     compressible_types: CompressibleType,
     contraband_types: ContrabandType,
@@ -116,8 +127,8 @@ tables! {
     mercenary_tactical_operations: MercenaryTacticalOperation,
     meta_groups: MetaGroup,
     metenox_moon_drill: MetenoxMoonDrill,
-    military_campaign_objectives: MilitaryCampaignObjective,
-    military_campaigns: MilitaryCampaign,
+    military_campaign_objectives: MilitaryCampaignObjective => String,
+    military_campaigns: MilitaryCampaign => String,
     missions: Mission,
     notification_types: NotificationType,
     npc_characters: NpcCharacter,
@@ -153,7 +164,7 @@ tables! {
     station_standings_restrictions: StationStandingsRestriction,
     system_dbuff_emitters: SystemDbuffEmitter,
     system_wide_effects: SystemWideEffect,
-    translation_languages: TranslationLanguage,
+    translation_languages: TranslationLanguage => String,
     type_bonuses: TypeBonuses,
     type_dogma: TypeDogma,
     type_elements: TypeElement,

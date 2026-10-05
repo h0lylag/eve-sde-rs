@@ -5,7 +5,7 @@ your local copy fresh.
 
 ```toml
 [dependencies]
-eve-sde = { path = "../eve-sde-rs" }
+eve-sde = "0.1"
 ```
 
 ## Look things up

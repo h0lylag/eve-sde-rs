@@ -5,9 +5,14 @@ edition = "2024"
 rust-version = "1.89"
 description = "Manage EVE Online SDE data"
 license = "MIT"
+repository = "https://github.com/h0lylag/eve-sde-rs"
 readme = "README.md"
 keywords = ["eve-online", "sde", "static-data"]
 categories = ["parser-implementations", "game-development"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = ["load"]

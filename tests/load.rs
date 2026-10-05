@@ -55,15 +55,34 @@ fn stargates() -> String {
 }
 
 fn planets() -> String {
-    format!(
-        r#"{{"_key":40000002,"solarSystemID":30000001,"typeID":11,"celestialIndex":4,"orbitID":40000001,"position":{POS},"radius":1.0,"statistics":{{"density":1,"eccentricity":0,"escapeVelocity":1,"locked":false,"massDust":1,"rotationRate":1,"spectralClass":"G","temperature":1}},"attributes":{{"heightMap1":1,"heightMap2":1,"shaderPreset":1,"population":false}}}}"#
-    )
+    let row = |id: u32, index: u32, unique: &str| {
+        format!(
+            r#"{{"_key":{id},"solarSystemID":30000001,"typeID":11,"celestialIndex":{index},"orbitID":40000001,"position":{POS},"radius":1.0,"statistics":{{"density":1,"eccentricity":0,"escapeVelocity":1,"locked":false,"massDust":1,"rotationRate":1,"spectralClass":"G","temperature":1}},"attributes":{{"heightMap1":1,"heightMap2":1,"shaderPreset":1,"population":false}}{unique}}}"#
+        )
+    };
+    [
+        row(40000002, 4, ""),
+        row(40000005, 5, r#","uniqueName":{"en":"Alpha V (Prime)"}"#),
+    ]
+    .join("\n")
 }
 
 fn moons() -> String {
-    format!(
-        r#"{{"_key":40000003,"solarSystemID":30000001,"typeID":14,"celestialIndex":4,"orbitIndex":2,"orbitID":40000002,"position":{POS},"radius":1.0,"attributes":{{"heightMap1":1,"heightMap2":1,"shaderPreset":1}}}}"#
-    )
+    let row = |id: u32, planet: u32, index: u32, orbit: u32| {
+        format!(
+            r#"{{"_key":{id},"solarSystemID":30000001,"typeID":14,"celestialIndex":{index},"orbitIndex":{orbit},"orbitID":{planet},"position":{POS},"radius":1.0,"attributes":{{"heightMap1":1,"heightMap2":1,"shaderPreset":1}}}}"#
+        )
+    };
+    [row(40000003, 40000002, 4, 2), row(40000006, 40000005, 5, 1)].join("\n")
+}
+
+fn belts() -> String {
+    let row = |id: u32, planet: u32, index: u32| {
+        format!(
+            r#"{{"_key":{id},"solarSystemID":30000001,"typeID":15,"celestialIndex":{index},"orbitIndex":1,"orbitID":{planet},"position":{POS}}}"#
+        )
+    };
+    [row(40000004, 40000002, 4), row(40000007, 40000005, 5)].join("\n")
 }
 
 fn stations() -> String {
@@ -87,6 +106,7 @@ fn fixture() -> Sde {
     let stargates = stargates();
     let planets = planets();
     let moons = moons();
+    let belts = belts();
     let stations = stations();
     let files = [
         ("types.jsonl", TYPES),
@@ -100,6 +120,7 @@ fn fixture() -> Sde {
         ("mapStargates.jsonl", &stargates),
         ("mapPlanets.jsonl", &planets),
         ("mapMoons.jsonl", &moons),
+        ("mapAsteroidBelts.jsonl", &belts),
         ("npcStations.jsonl", &stations),
         ("npcCorporations.jsonl", CORPS),
         ("stationOperations.jsonl", OPERATIONS),
@@ -208,6 +229,25 @@ fn builds_celestial_and_station_names() {
     assert_eq!(
         sde.name(60000002).as_deref(),
         Some("Alpha IV - Caldari Navy")
+    );
+}
+
+#[test]
+fn moons_and_belts_are_named_after_their_planet() {
+    let sde = fixture();
+    assert_eq!(
+        sde.name(40000004).as_deref(),
+        Some("Alpha IV - Asteroid Belt 1")
+    );
+    // The SDE names this planet but not its moon or belt.
+    assert_eq!(sde.name(40000005).as_deref(), Some("Alpha V (Prime)"));
+    assert_eq!(
+        sde.name(40000006).as_deref(),
+        Some("Alpha V (Prime) - Moon 1")
+    );
+    assert_eq!(
+        sde.name(40000007).as_deref(),
+        Some("Alpha V (Prime) - Asteroid Belt 1")
     );
 }
 

@@ -59,6 +59,15 @@ pub(crate) fn derive_station_name(sde: &Sde, station: &NpcStation) -> String {
 }
 
 impl Sde {
+    /// A planet's name, such as `Jita IV` or `Amarr VIII (Oris)`. Without the
+    /// planet's record, it comes from the system and the planet's index.
+    fn planet_name(&self, id: u32, system_id: SystemId, celestial_index: u32) -> Cow<'_, str> {
+        let unique = self.planets.get(&id).and_then(|p| p.unique_name.as_deref());
+        unique_or(unique, || {
+            format!("{} {}", self.system_name(system_id), roman(celestial_index))
+        })
+    }
+
     fn system_name(&self, id: SystemId) -> &str {
         self.solar_systems
             .get(&id)
@@ -97,35 +106,24 @@ impl Sde {
     }
 
     /// Name of a star, planet, moon or asteroid belt. Uses the SDE's own name
-    /// where it has one.
+    /// where it has one. Moons and belts are named after their planet, e.g.
+    /// `Amarr VIII (Oris) - Moon 1`.
     pub fn celestial_name(&self, id: u32) -> Option<Cow<'_, str>> {
         if let Some(moon) = self.moons.get(&id) {
             return Some(unique_or(moon.unique_name.as_deref(), || {
-                format!(
-                    "{} {} - Moon {}",
-                    self.system_name(moon.solar_system_id),
-                    roman(moon.celestial_index),
-                    moon.orbit_index
-                )
+                let planet =
+                    self.planet_name(moon.orbit_id, moon.solar_system_id, moon.celestial_index);
+                format!("{planet} - Moon {}", moon.orbit_index)
             }));
         }
         if let Some(planet) = self.planets.get(&id) {
-            return Some(unique_or(planet.unique_name.as_deref(), || {
-                format!(
-                    "{} {}",
-                    self.system_name(planet.solar_system_id),
-                    roman(planet.celestial_index)
-                )
-            }));
+            return Some(self.planet_name(id, planet.solar_system_id, planet.celestial_index));
         }
         if let Some(belt) = self.asteroid_belts.get(&id) {
             return Some(unique_or(belt.unique_name.as_deref(), || {
-                format!(
-                    "{} {} - Asteroid Belt {}",
-                    self.system_name(belt.solar_system_id),
-                    roman(belt.celestial_index),
-                    belt.orbit_index
-                )
+                let planet =
+                    self.planet_name(belt.orbit_id, belt.solar_system_id, belt.celestial_index);
+                format!("{planet} - Asteroid Belt {}", belt.orbit_index)
             }));
         }
         let star = self.stars.get(&id)?;

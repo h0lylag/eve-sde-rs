@@ -20,6 +20,8 @@
 //! English text only. The `download` feature checks for new builds and
 //! downloads them. Without `load` only [`ids`] is available.
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 pub mod ids;
 
 #[cfg(any(feature = "load", feature = "download"))]
