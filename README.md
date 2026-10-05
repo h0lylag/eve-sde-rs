@@ -8,6 +8,8 @@ your local copy fresh.
 eve-sde = "0.1"
 ```
 
+Needs Rust 1.89 or newer.
+
 ## Look things up
 
 ```rust
@@ -35,6 +37,11 @@ cargo run --release --example type_name -- sde.zip 587 Rifter
 
 Grab it by hand from <https://developers.eveonline.com/static-data/>, or
 turn on the `download` feature and let the crate handle it for you:
+
+```toml
+[dependencies]
+eve-sde = { version = "0.1", features = ["download"] }
+```
 
 ```rust
 use eve_sde::download::Client;

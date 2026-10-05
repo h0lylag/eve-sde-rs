@@ -9,7 +9,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpListener;
 use std::ops::ControlFlow;
 use std::path::Path;
-use std::sync::mpsc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, mpsc};
 use std::thread;
 use std::time::Duration;
 
@@ -45,7 +46,8 @@ impl Response {
     }
 }
 
-/// A throwaway HTTP server. Returns its base URL.
+/// Start an HTTP server that answers with `handler`, one connection at a
+/// time. Returns its base URL.
 fn serve(handler: impl Fn(&Request) -> Response + Send + 'static) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let base = format!("http://{}", listener.local_addr().unwrap());
@@ -94,7 +96,8 @@ fn zip_path(build: u32) -> String {
     format!("/eve-online-static-data-{build}-jsonl.zip")
 }
 
-/// Serves `latest` as the latest build and builds in `zips` at their URLs.
+/// A server that lists `latest` as the latest build, with the ETag `"tag"`,
+/// and serves each ZIP in `zips` at its URL.
 fn release_server(latest: u32, zips: Vec<(u32, Vec<u8>)>) -> String {
     serve(move |req| {
         if req.path == "/latest.jsonl" {
@@ -112,6 +115,7 @@ fn release_server(latest: u32, zips: Vec<(u32, Vec<u8>)>) -> String {
     })
 }
 
+/// The sorted names of the files in `dir`.
 fn only_file(dir: &Path) -> Vec<String> {
     let mut names: Vec<_> = std::fs::read_dir(dir)
         .unwrap()
@@ -262,7 +266,7 @@ fn overlapping_downloads_do_not_share_temporary_files() {
     let dir = tempfile::tempdir().unwrap();
     let dest = dir.path().join("sde.zip");
     std::fs::write(&dest, build_only_zip(1)).unwrap();
-    // Each test server handles one request at a time.
+    // Two servers, because each one answers one connection at a time.
     let first_client = client(&release_server(2, vec![(2, build_only_zip(2))]));
     let second_client = first_client
         .clone()
@@ -322,6 +326,24 @@ fn missing_folder_error_names_the_file() {
     assert!(message.starts_with("cannot create `"), "{message}");
     assert!(message.contains("missing"), "{message}");
     assert!(std::error::Error::source(&err).is_some());
+}
+
+#[test]
+fn destination_without_file_name_fails_before_any_request() {
+    let requests = Arc::new(AtomicUsize::new(0));
+    let seen = Arc::clone(&requests);
+    let client = client(&serve(move |_| {
+        seen.fetch_add(1, Ordering::SeqCst);
+        Response::status(404)
+    }));
+    let download = client.download(2, "..", |_, _| ControlFlow::Continue(()));
+    for err in [download.unwrap_err(), client.update("..").unwrap_err()] {
+        assert!(
+            matches!(&err, Error::Io(e) if e.kind() == std::io::ErrorKind::InvalidInput),
+            "{err:?}"
+        );
+    }
+    assert_eq!(requests.load(Ordering::SeqCst), 0);
 }
 
 #[test]

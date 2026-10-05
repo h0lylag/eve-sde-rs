@@ -41,7 +41,6 @@ fn answers_known_questions() {
     use eve_sde::{SecurityBand, Slot, SpaceKind};
     let sde = load();
 
-    // Names and IDs.
     assert_eq!(sde.type_id("tritanium"), Some(34));
     assert_eq!(sde.type_name(34), Some("Tritanium"));
     let jita = sde.system_id("Jita").unwrap();
@@ -50,12 +49,11 @@ fn answers_known_questions() {
     assert_eq!(sde.region_id("The Forge"), Some(10000002));
     assert_eq!(sde.faction_id("Caldari State"), Some(500001));
 
-    // Duplicate type names: the published item wins, all are listed.
+    // Several types share this name. All are listed, a published one first.
     let quafe = sde.type_ids("Spiked Quafe");
     assert!(quafe.len() > 1);
     assert!(sde.types()[&quafe[0]].published);
 
-    // Gates and names.
     assert!(
         sde.neighbors(jita)
             .contains(&sde.system_id("Perimeter").unwrap())
@@ -72,7 +70,6 @@ fn answers_known_questions() {
         Some(60003760)
     );
 
-    // Space kinds.
     assert_eq!(sde.solar_systems()[&jita].space(), SpaceKind::KnownSpace);
     assert_eq!(
         sde.solar_systems()[&jita].security_band(),
@@ -90,7 +87,6 @@ fn answers_known_questions() {
             .all(|s| sde.neighbors(s.id).is_empty())
     );
 
-    // Items and dogma.
     let rifter = sde.type_id("Rifter").unwrap();
     assert_eq!(rifter, 587);
     assert_eq!(sde.group_of(rifter).unwrap().name, "Frigate");

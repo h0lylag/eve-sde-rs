@@ -8,12 +8,14 @@ use crate::model::{SolarSystem, Stargate};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SpaceKind {
-    /// The gated universe, including Pochven, Zarzakh and the systems that no
-    /// gate reaches.
+    /// The gated universe, including Pochven, Zarzakh and the three Jove
+    /// regions that no gate reaches.
     KnownSpace,
+    /// Wormhole space, including Thera.
     Wormhole,
     Abyssal,
-    /// Event and test systems.
+    /// Systems in any other ID range, such as the empty systems of the VR
+    /// regions.
     Special,
 }
 
@@ -21,13 +23,16 @@ pub enum SpaceKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SecurityBand {
+    /// Shown as 0.5 to 1.0.
     High,
+    /// Shown as 0.1 to 0.4.
     Low,
+    /// Shown as 0.0 or below.
     Null,
 }
 
 impl SolarSystem {
-    /// What sort of space this system is in.
+    /// What sort of space this system is in, from its ID.
     pub fn space(&self) -> SpaceKind {
         match self.id {
             30_000_000..=30_999_999 => SpaceKind::KnownSpace,
@@ -37,8 +42,8 @@ impl SolarSystem {
         }
     }
 
-    /// Security status rounded the way the game shows it. Anything above zero
-    /// but below 0.05 shows as 0.1.
+    /// The security status, rounded the way the game shows it. Anything above
+    /// zero but below 0.05 shows as 0.1.
     pub fn security_rounded(&self) -> f64 {
         let s = self.security_status;
         if s <= 0.0 || s >= 0.05 {
@@ -54,7 +59,8 @@ impl SolarSystem {
         format!("{:.1}", self.security_rounded())
     }
 
-    /// High from 0.45 up (shown as 0.5), low above 0.0, null otherwise.
+    /// The security band: high from 0.45 (shown as 0.5), low above 0.0, null
+    /// otherwise.
     pub fn security_band(&self) -> SecurityBand {
         if self.security_status >= 0.45 {
             SecurityBand::High
@@ -67,8 +73,8 @@ impl SolarSystem {
 }
 
 impl Sde {
-    /// Systems reachable through one stargate, ascending. Empty for systems
-    /// without gates (wormholes, abyssal space, a few isolated systems).
+    /// Systems one stargate away, ascending. Empty for a system without
+    /// stargates, such as a wormhole system.
     pub fn neighbors(&self, system_id: SystemId) -> &[SystemId] {
         self.index
             .neighbors

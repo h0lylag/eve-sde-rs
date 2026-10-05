@@ -20,3 +20,23 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
       - run: cargo test ${{ matrix.features }}
+  # The oldest Rust that Cargo.toml promises to support.
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.89"
+      - run: cargo test --all-features --locked
+  # Build the docs the way docs.rs does. Doc tests run here too, because only
+  # nightly checks the error codes on `compile_fail` examples.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: --cfg docsrs -D warnings
+      - run: cargo test --doc --all-features

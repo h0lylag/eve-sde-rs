@@ -181,7 +181,8 @@ fn reads_dogma() {
     let sde = fixture();
     assert_eq!(sde.attribute(587, 14), Some(3.0));
     assert_eq!(sde.attribute_named(587, "hiSlots"), Some(3.0));
-    // Not listed: the attribute default. Unknown type: nothing.
+    // A type without the attribute gets its default. An unknown type gets
+    // nothing.
     assert_eq!(sde.attribute(34, 14), Some(0.0));
     assert_eq!(sde.attribute(99999, 14), None);
     assert_eq!(sde.attributes(587).count(), 1);

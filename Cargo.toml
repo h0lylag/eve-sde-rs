@@ -9,6 +9,7 @@ repository = "https://github.com/h0lylag/eve-sde-rs"
 readme = "README.md"
 keywords = ["eve-online", "sde", "static-data"]
 categories = ["parser-implementations", "game-development"]
+exclude = [".github/", ".gitignore"]
 
 [package.metadata.docs.rs]
 all-features = true
@@ -23,7 +24,7 @@ download = ["dep:ureq", "dep:zip", "dep:serde", "dep:serde_json"]
 serde = { version = "1.0.229", features = ["derive"], optional = true }
 serde_json = { version = "1.0.151", optional = true }
 ureq = { version = "3.4.2", optional = true }
-zip = { version = "8.6.0", default-features = false, features = ["deflate"], optional = true }
+zip = { version = "8.6.0", default-features = false, features = ["deflate-flate2-zlib-rs"], optional = true }
 
 [dev-dependencies]
 tempfile = "3.27.0"

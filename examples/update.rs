@@ -1,6 +1,6 @@
-//! `cargo run --release --features download --example update -- sde.zip`
+//! Download the latest SDE if the file is missing or old.
 //!
-//! Downloads the latest SDE if the file is missing or old.
+//! `cargo run --release --features download --example update -- sde.zip`
 
 use eve_sde::download::{Client, Update};
 

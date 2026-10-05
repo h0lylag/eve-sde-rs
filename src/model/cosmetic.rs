@@ -1,4 +1,4 @@
-//! Icons, graphics, SKINs and the ship tree.
+//! Icons, graphics, SKINs, the SKINR designer and the ship tree.
 
 use super::*;
 use crate::de;
@@ -91,7 +91,7 @@ pub struct SkinLicense {
     pub license_type_id: u32,
     #[serde(rename = "skinID")]
     pub skin_id: u32,
-    /// Days; -1 means permanent.
+    /// In days, or -1 for permanent.
     pub duration: i64,
     #[serde(default)]
     pub is_single_use: bool,
@@ -122,12 +122,14 @@ pub struct SkinrComponentCategory {
 }
 record!(SkinrComponentCategory, "skinrComponentCategories.jsonl");
 
-/// `skinrComponentPointValues.jsonl`
+/// `skinrComponentPointValues.jsonl`: the points of a component category (the
+/// `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct SkinrComponentPointValues {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// Rarity ID to points.
     #[serde(rename = "_value", deserialize_with = "de::kv_map")]
     pub values: BTreeMap<u32, i64>,
 }
@@ -238,7 +240,8 @@ pub struct SkinrSlot {
 }
 record!(SkinrSlot, "skinrSlots.jsonl");
 
-/// `skinrSlotsToMaterials.jsonl`: per faction (the key).
+/// `skinrSlotsToMaterials.jsonl`: the material in each SKINR slot for a
+/// faction (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct SkinrSlotsToMaterials {
@@ -258,18 +261,20 @@ pub struct SlotMaterial {
     pub material_id: u32,
 }
 
-/// `skinrTierThresholds.jsonl`
+/// `skinrTierThresholds.jsonl`: the tier thresholds of a ship tree group (the
+/// `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct SkinrTierThreshold {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// Tier, from 1, to its threshold.
     #[serde(rename = "_value", deserialize_with = "de::kv_map")]
     pub thresholds: BTreeMap<u32, i64>,
 }
 record!(SkinrTierThreshold, "skinrTierThresholds.jsonl");
 
-/// `shipTreeElements.jsonl`
+/// `shipTreeElements.jsonl`: ship tree tags, such as Small, Combat or Shields.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct ShipTreeElement {
@@ -283,7 +288,7 @@ pub struct ShipTreeElement {
 }
 record!(ShipTreeElement, "shipTreeElements.jsonl");
 
-/// `shipTreeFactions.jsonl`
+/// `shipTreeFactions.jsonl`: the ship tree entry of a faction (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct ShipTreeFaction {
@@ -292,12 +297,13 @@ pub struct ShipTreeFaction {
     #[serde(deserialize_with = "de::en")]
     pub description: String,
     pub icon: String,
+    /// Order, from 1, to [`ShipTreeElement`] ID.
     #[serde(deserialize_with = "de::kv_map")]
     pub elements: BTreeMap<u32, u32>,
 }
 record!(ShipTreeFaction, "shipTreeFactions.jsonl");
 
-/// `shipTreeGroups.jsonl`
+/// `shipTreeGroups.jsonl`: ship classes in the ship tree, such as Corvette.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -313,6 +319,7 @@ pub struct ShipTreeGroup {
     pub icon_small: String,
     #[serde(rename = "iconSmallNPC")]
     pub icon_small_npc: String,
+    /// Order, from 1, to [`ShipTreeElement`] ID.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub elements: BTreeMap<u32, u32>,
     #[serde(default)]

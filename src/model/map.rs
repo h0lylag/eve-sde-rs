@@ -1,4 +1,5 @@
-//! The map: regions down to stargates, plus planetary industry data.
+//! The map from regions down to stargates, plus landmarks, sovereignty
+//! resources and planetary industry schematics.
 
 use super::*;
 use crate::de;
@@ -47,8 +48,8 @@ pub struct Constellation {
 }
 record!(Constellation, "mapConstellations.jsonl");
 
-/// `mapSolarSystems.jsonl`. Gate links are in [`Stargate`]; see
-/// `Sde::neighbors` for the joined view.
+/// `mapSolarSystems.jsonl`. Gate links are in [`Stargate`], and
+/// [`Sde::neighbors`](crate::Sde::neighbors) joins them.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -193,9 +194,9 @@ pub struct Planet {
     pub solar_system_id: u32,
     #[serde(rename = "typeID")]
     pub type_id: u32,
-    /// Position of this planet in its system, from 1.
+    /// The planet's number in its system, from 1, as in Jita IV.
     pub celestial_index: u32,
-    /// What it orbits: the star.
+    /// The star this planet orbits.
     #[serde(rename = "orbitID")]
     pub orbit_id: u32,
     pub position: Position,
@@ -225,15 +226,16 @@ pub struct Moon {
     pub solar_system_id: u32,
     #[serde(rename = "typeID")]
     pub type_id: u32,
-    /// Index of the planet this moon orbits.
+    /// The number of the planet this moon orbits.
     pub celestial_index: u32,
-    /// Moon number around that planet, from 1.
+    /// The moon's number around that planet, from 1.
     pub orbit_index: u32,
-    /// The planet.
+    /// The planet this moon orbits.
     #[serde(rename = "orbitID")]
     pub orbit_id: u32,
     pub position: Position,
     pub radius: f64,
+    /// Set only for a few moons with special names.
     #[serde(default, deserialize_with = "de::en_opt")]
     pub unique_name: Option<String>,
     pub statistics: Option<CelestialStatistics>,
@@ -254,19 +256,24 @@ pub struct AsteroidBelt {
     pub solar_system_id: u32,
     #[serde(rename = "typeID")]
     pub type_id: u32,
+    /// The number of the planet this belt orbits.
     pub celestial_index: u32,
+    /// The belt's number around that planet, from 1.
     pub orbit_index: u32,
+    /// The planet this belt orbits.
     #[serde(rename = "orbitID")]
     pub orbit_id: u32,
     pub position: Position,
     pub radius: Option<f64>,
+    /// Set only for a few belts with special names.
     #[serde(default, deserialize_with = "de::en_opt")]
     pub unique_name: Option<String>,
     pub statistics: Option<CelestialStatistics>,
 }
 record!(AsteroidBelt, "mapAsteroidBelts.jsonl");
 
-/// `mapSecondarySuns.jsonl`: the extra sun of some wormhole systems.
+/// `mapSecondarySuns.jsonl`: the second sun, such as a black hole or a
+/// Wolf-Rayet star, that gives a wormhole system its effect.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -283,7 +290,7 @@ pub struct SecondarySun {
 }
 record!(SecondarySun, "mapSecondarySuns.jsonl");
 
-/// `landmarks.jsonl`
+/// `landmarks.jsonl`: notable places on the map, such as the EVE Gate.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -302,7 +309,8 @@ pub struct Landmark {
 }
 record!(Landmark, "landmarks.jsonl");
 
-/// `planetResources.jsonl`: what a planet offers for sovereignty upgrades.
+/// `planetResources.jsonl`: the power, workforce or reagent that a star or
+/// planet (the `id`) gives sovereignty upgrades.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct PlanetResource {
@@ -314,7 +322,7 @@ pub struct PlanetResource {
 }
 record!(PlanetResource, "planetResources.jsonl");
 
-/// Field names are snake_case in the source file.
+// No `rename_all`: this part of the file already uses snake_case names.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct PlanetReagent {
@@ -334,6 +342,7 @@ pub struct PlanetSchematic {
     pub id: u32,
     #[serde(deserialize_with = "de::en")]
     pub name: String,
+    /// In seconds.
     pub cycle_time: i64,
     /// Structure types that can run this schematic.
     pub pins: Vec<u32>,

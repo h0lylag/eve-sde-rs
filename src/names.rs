@@ -1,4 +1,5 @@
-//! Names that the SDE does not store: stations, most planets and moons, gates.
+//! Names that the SDE does not store: stations, stargates, stars, and most
+//! planets, moons and asteroid belts.
 
 use crate::Sde;
 use crate::ids::{self, IdKind, StationId, SystemId};
@@ -36,10 +37,11 @@ pub(crate) fn roman(n: u32) -> String {
     out
 }
 
-/// `{system} - {corporation}` with the planet or moon in front and the
-/// operation after, e.g. `Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
+/// A station's in-game name: the planet or moon it orbits, its owner and, if
+/// `use_operation_name` is set, its operation, e.g.
+/// `Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
 pub(crate) fn derive_station_name(sde: &Sde, station: &NpcStation) -> String {
-    // A station orbiting a star (Zarzakh) is named after the system alone.
+    // A station that orbits a star, as in Zarzakh, starts with the system name.
     let place = sde
         .celestial_name(station.orbit_id)
         .filter(|_| !sde.stars.contains_key(&station.orbit_id))
@@ -59,8 +61,8 @@ pub(crate) fn derive_station_name(sde: &Sde, station: &NpcStation) -> String {
 }
 
 impl Sde {
-    /// A planet's name, such as `Jita IV` or `Amarr VIII (Oris)`. Without the
-    /// planet's record, it comes from the system and the planet's index.
+    /// A planet's name, such as `Jita IV` or `Amarr VIII (Oris)`: the SDE's
+    /// name if it has one, else the system name and the planet's numeral.
     fn planet_name(&self, id: u32, system_id: SystemId, celestial_index: u32) -> Cow<'_, str> {
         let unique = self.planets.get(&id).and_then(|p| p.unique_name.as_deref());
         unique_or(unique, || {
@@ -77,7 +79,8 @@ impl Sde {
     /// The in-game name of anything with an ID in the SDE's location and NPC
     /// ranges: regions, constellations, systems, stars, planets, moons,
     /// asteroid belts, stargates, NPC stations, factions, NPC corporations and
-    /// NPC characters. For types use [`Sde::type_name`]. Player IDs return `None`.
+    /// NPC characters. For types use [`Sde::type_name`]. Player IDs return
+    /// `None`.
     pub fn name(&self, id: u32) -> Option<Cow<'_, str>> {
         fn borrowed(s: &str) -> Option<Cow<'_, str>> {
             Some(Cow::Borrowed(s))
@@ -100,14 +103,15 @@ impl Sde {
         }
     }
 
-    /// Name of an NPC station, e.g. `Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
+    /// The name of an NPC station, e.g.
+    /// `Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
     pub fn station_name(&self, id: StationId) -> Option<&str> {
         self.index.station_names.get(&id).map(String::as_str)
     }
 
-    /// Name of a star, planet, moon or asteroid belt. Uses the SDE's own name
-    /// where it has one. Moons and belts are named after their planet, e.g.
-    /// `Amarr VIII (Oris) - Moon 1`.
+    /// The name of a star, planet, moon or asteroid belt. Uses the SDE's name
+    /// where it has one. Otherwise moons and belts are named after their
+    /// planet, e.g. `Eon Prime - Moon 1`.
     pub fn celestial_name(&self, id: u32) -> Option<Cow<'_, str>> {
         if let Some(moon) = self.moons.get(&id) {
             return Some(unique_or(moon.unique_name.as_deref(), || {

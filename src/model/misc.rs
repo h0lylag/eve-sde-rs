@@ -24,7 +24,7 @@ pub struct FighterAbility {
 }
 record!(FighterAbility, "fighterAbilities.jsonl");
 
-/// `fighterAbilitiesByType.jsonl`
+/// `fighterAbilitiesByType.jsonl`: the abilities of a fighter type (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -55,7 +55,9 @@ pub struct AbilityCharges {
     pub rearm_time_seconds: i64,
 }
 
-/// `sovereigntyUpgrades.jsonl`. Field names are snake_case in the source.
+/// `sovereigntyUpgrades.jsonl`: the fuel, power and workforce of a
+/// sovereignty hub upgrade type (the `id`).
+// No `rename_all`: this file already uses snake_case names.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct SovereigntyUpgrade {
@@ -70,6 +72,7 @@ pub struct SovereigntyUpgrade {
 }
 record!(SovereigntyUpgrade, "sovereigntyUpgrades.jsonl");
 
+// No `rename_all`: this file already uses snake_case names.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct SovereigntyFuel {
@@ -91,7 +94,8 @@ pub struct MetenoxMoonDrill {
 }
 record!(MetenoxMoonDrill, "metenoxMoonDrill.jsonl");
 
-/// `controlTowerResources.jsonl`: fuel use of each control tower.
+/// `controlTowerResources.jsonl`: the fuel use of a control tower type (the
+/// `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct ControlTowerResources {
@@ -114,7 +118,7 @@ pub struct TowerResource {
     pub min_security_level: Option<f64>,
 }
 
-/// `contrabandTypes.jsonl`
+/// `contrabandTypes.jsonl`: the factions that ban a type (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct ContrabandType {
@@ -136,7 +140,8 @@ pub struct ContrabandFaction {
     pub standing_loss: f64,
 }
 
-/// `translationLanguages.jsonl`: `en`, `de`, … and their names.
+/// `translationLanguages.jsonl`: the name of a language code (the `id`), such
+/// as `en`.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct TranslationLanguage {

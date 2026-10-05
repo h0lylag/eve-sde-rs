@@ -4,7 +4,8 @@ use super::*;
 use crate::de;
 use std::collections::BTreeMap;
 
-/// `npcStations.jsonl`. The file has no names; see `Sde::station_name`.
+/// `npcStations.jsonl`. The file has no names, but
+/// [`Sde::station_name`](crate::Sde::station_name) derives them.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -19,10 +20,13 @@ pub struct NpcStation {
     pub type_id: u32,
     #[serde(rename = "operationID")]
     pub operation_id: u32,
-    /// The planet or moon the station orbits.
+    /// The planet, moon or star the station orbits.
     #[serde(rename = "orbitID")]
     pub orbit_id: u32,
+    /// The number of the planet the station orbits, directly or through a
+    /// moon.
     pub celestial_index: Option<u32>,
+    /// The moon's number, if the station orbits a moon.
     pub orbit_index: Option<u32>,
     pub position: Position,
     pub use_operation_name: bool,
@@ -81,10 +85,11 @@ pub struct NpcCorporation {
     pub allowed_member_races: Vec<u32>,
     #[serde(default, rename = "lpOfferTables")]
     pub lp_offer_tables: Vec<u32>,
-    /// Type ID to how often the corporation trades it.
+    /// Type ID to CCP's supply and demand value for it, which can be
+    /// negative.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub corporation_trades: BTreeMap<u32, f64>,
-    /// Corporation ID to share count.
+    /// Investor corporation ID to its percentage of the shares.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub investors: BTreeMap<u32, i64>,
     #[serde(default, deserialize_with = "de::kv_map")]
@@ -139,7 +144,7 @@ pub struct NpcCharacter {
     pub bloodline_id: u32,
     #[serde(rename = "raceID")]
     pub race_id: u32,
-    /// True for male.
+    /// `true` for male, `false` for female.
     pub gender: bool,
     pub ceo: bool,
     pub unique_name: bool,
@@ -190,7 +195,8 @@ pub struct AgentType {
 }
 record!(AgentType, "agentTypes.jsonl");
 
-/// `agentsInSpace.jsonl`
+/// `agentsInSpace.jsonl`: agents (the `id`) found in a dungeon in space
+/// instead of a station.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -258,9 +264,9 @@ pub struct StationOperation {
     pub manufacturing_factor: f64,
     pub ratio: f64,
     pub research_factor: f64,
-    /// Station service IDs on offer.
+    /// The [`StationService`] IDs on offer.
     pub services: Vec<u32>,
-    /// Station type per race.
+    /// Race ID to station type ID.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub station_types: BTreeMap<u32, u32>,
 }
@@ -280,7 +286,8 @@ pub struct StationService {
 }
 record!(StationService, "stationServices.jsonl");
 
-/// `stationStandingsRestrictions.jsonl`
+/// `stationStandingsRestrictions.jsonl`: the standing needed for each station
+/// service of a faction (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct StationStandingsRestriction {

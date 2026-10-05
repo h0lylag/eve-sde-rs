@@ -125,14 +125,21 @@ impl Index {
 }
 
 macro_rules! name_lookups {
-    ($($one:ident, $all:ident, $field:ident, $id:ty, $what:literal;)*) => {
+    ($($one:ident, $all:ident, $field:ident, $id:ty, $what:literal, $order:literal $(, $note:literal)?;)*) => {
         impl Sde {$(
-            #[doc = concat!("ID of the ", $what, " with this name, ignoring case. With several matches this is the first of [`Sde::", stringify!($all), "`].")]
+            #[doc = concat!(
+                "ID of the ", $what, " with this name, ignoring case and surrounding whitespace.",
+                $(" ", $note,)?
+                " With several matches this is the first of [`Sde::", stringify!($all), "`]."
+            )]
             pub fn $one(&self, name: &str) -> Option<$id> {
                 self.$all(name).first().copied()
             }
 
-            #[doc = concat!("Every ", $what, " ID with this name, ignoring case. Published (for corporations: not deleted) IDs come first, then lower IDs before higher.")]
+            #[doc = concat!(
+                "Every ", $what, " ID with this name, ignoring case and surrounding whitespace.",
+                $(" ", $note,)? " ", $order
+            )]
             pub fn $all(&self, name: &str) -> &[$id] {
                 self.index.$field.get(&key(name)).map_or(&[], Vec::as_slice)
             }
@@ -141,18 +148,30 @@ macro_rules! name_lookups {
 }
 
 name_lookups! {
-    type_id, type_ids, types, TypeId, "type";
-    group_id, group_ids, groups, GroupId, "group";
-    category_id, category_ids, categories, CategoryId, "category";
-    market_group_id, market_group_ids, market_groups, MarketGroupId, "market group";
-    system_id, system_ids, systems, SystemId, "solar system";
-    constellation_id, constellation_ids, constellations, ConstellationId, "constellation";
-    region_id, region_ids, regions, RegionId, "region";
-    station_id, station_ids, stations, StationId, "NPC station";
-    faction_id, faction_ids, factions, FactionId, "faction";
-    corporation_id, corporation_ids, corporations, CorporationId, "NPC corporation";
-    attribute_id, attribute_ids, attributes, AttributeId, "dogma attribute (by internal name)";
-    effect_id, effect_ids, effects, EffectId, "dogma effect (by internal name)";
+    type_id, type_ids, types, TypeId, "type",
+        "Published types come first, then lower IDs.";
+    group_id, group_ids, groups, GroupId, "group",
+        "Published groups come first, then lower IDs.";
+    category_id, category_ids, categories, CategoryId, "category",
+        "Published categories come first, then lower IDs.";
+    market_group_id, market_group_ids, market_groups, MarketGroupId, "market group",
+        "Lower IDs come first.";
+    system_id, system_ids, systems, SystemId, "solar system",
+        "Lower IDs come first.";
+    constellation_id, constellation_ids, constellations, ConstellationId, "constellation",
+        "Lower IDs come first.";
+    region_id, region_ids, regions, RegionId, "region",
+        "Lower IDs come first.";
+    station_id, station_ids, stations, StationId, "NPC station",
+        "Lower IDs come first.";
+    faction_id, faction_ids, factions, FactionId, "faction",
+        "Lower IDs come first.";
+    corporation_id, corporation_ids, corporations, CorporationId, "NPC corporation",
+        "Corporations that are not deleted come first, then lower IDs.";
+    attribute_id, attribute_ids, attributes, AttributeId, "dogma attribute",
+        "Lower IDs come first.", "Use the internal name, such as `hiSlots`.";
+    effect_id, effect_ids, effects, EffectId, "dogma effect",
+        "Lower IDs come first.", "Use the internal name, such as `hiPower`.";
 }
 
 /// The kind of fitting slot a module needs.
@@ -163,7 +182,9 @@ pub enum Slot {
     Mid,
     Low,
     Rig,
+    /// A Tech III cruiser subsystem slot.
     Subsystem,
+    /// A service slot of an Upwell structure.
     Service,
 }
 
@@ -192,19 +213,23 @@ const HARDPOINT_EFFECTS: [(EffectId, Hardpoint); 2] = [
 ];
 
 impl Sde {
-    /// English name of a type.
+    /// The English name of a type.
     pub fn type_name(&self, id: TypeId) -> Option<&str> {
         self.types.get(&id).map(|t| t.name.as_str())
     }
 
+    /// The group of a type, such as Frigate for the Rifter.
     pub fn group_of(&self, type_id: TypeId) -> Option<&Group> {
         self.groups.get(&self.types.get(&type_id)?.group_id)
     }
 
+    /// The category of a type, such as Ship for the Rifter.
     pub fn category_of(&self, type_id: TypeId) -> Option<&Category> {
         self.categories.get(&self.group_of(type_id)?.category_id)
     }
 
+    /// The meta group of a type, such as Tech II. `None` if the type has no
+    /// meta group.
     pub fn meta_group_of(&self, type_id: TypeId) -> Option<&MetaGroup> {
         self.meta_groups
             .get(&self.types.get(&type_id)?.meta_group_id?)
@@ -217,7 +242,7 @@ impl Sde {
         let mut next = self.types.get(&type_id).and_then(|t| t.market_group_id);
         while let Some(group) = next.and_then(|id| self.market_groups.get(&id)) {
             if path.iter().any(|seen| seen.id == group.id) {
-                break; // The parents loop; stop rather than spin.
+                break; // The parents form a loop.
             }
             path.push(group);
             next = group.parent_group_id;
@@ -242,8 +267,9 @@ impl Sde {
             .map_or(&[], Vec::as_slice)
     }
 
-    /// A dogma attribute of a type. If the type does not list it, the
-    /// attribute's default applies. `None` for an unknown type or attribute.
+    /// The value of a dogma attribute for a type. If the type does not list
+    /// the attribute, its default value applies. `None` for an unknown type or
+    /// attribute.
     pub fn attribute(&self, type_id: TypeId, attribute_id: AttributeId) -> Option<f64> {
         let listed = self.type_dogma.get(&type_id).and_then(|d| {
             d.dogma_attributes
@@ -260,7 +286,8 @@ impl Sde {
         }
     }
 
-    /// Like [`Sde::attribute`], by internal name such as `hiSlots` or `cpuOutput`.
+    /// Like [`Sde::attribute`], by internal name such as `hiSlots` or
+    /// `cpuOutput`.
     pub fn attribute_named(&self, type_id: TypeId, name: &str) -> Option<f64> {
         self.attribute(type_id, self.attribute_id(name)?)
     }

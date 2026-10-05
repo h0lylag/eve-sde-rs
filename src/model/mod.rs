@@ -1,8 +1,10 @@
-//! One struct per SDE file. Field names are snake_case versions of CCP's.
-//! Text fields hold the English string only.
+//! One struct per SDE file, and the structs nested in them. Field names are
+//! snake_case versions of CCP's, with a few renamed to read better. Text
+//! fields hold the English text only.
 //!
-//! Every struct has an `id` field (CCP's `_key`). Numbers that can be negative
-//! or are not IDs use wider types; unknown fields in the data are ignored.
+//! Every file's struct has an `id` field, which holds CCP's `_key`. It is a
+//! `u32` except in the few files keyed by strings. Fields in the data that
+//! this crate does not know are ignored.
 //!
 //! The structs are `#[non_exhaustive]`: a later version can add fields as CCP
 //! adds them without breaking your code. To make a small value type such as
@@ -51,7 +53,7 @@ pub use misc::*;
 pub use npc::*;
 pub use types::*;
 
-/// A point in metres.
+/// A point in meters.
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct Position {
@@ -61,10 +63,6 @@ pub struct Position {
 }
 
 impl Position {
-    /// ```
-    /// let origin = eve_sde::model::Position::new(0.0, 0.0, 0.0);
-    /// assert_eq!(origin.x, 0.0);
-    /// ```
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Position { x, y, z }
     }
@@ -115,7 +113,6 @@ impl Rgba {
     }
 }
 
-/// A type and how many of it.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct TypeQuantity {
@@ -124,7 +121,6 @@ pub struct TypeQuantity {
     pub quantity: i64,
 }
 
-/// A skill type and a level.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct SkillLevel {
@@ -133,7 +129,6 @@ pub struct SkillLevel {
     pub level: u8,
 }
 
-/// `{"dogmaAttributeID": …}`
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct AttributeRef {

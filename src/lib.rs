@@ -18,7 +18,7 @@
 //!
 //! The `load` feature (on by default) reads CCP's JSON Lines ZIP, every table,
 //! English text only. The `download` feature checks for new builds and
-//! downloads them. Without `load` only [`ids`] is available.
+//! downloads them. With neither feature, only [`ids`] is available.
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 

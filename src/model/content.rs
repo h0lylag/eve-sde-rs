@@ -169,7 +169,7 @@ record!(
     "mercenaryTacticalOperations.jsonl"
 );
 
-/// `militaryCampaigns.jsonl`. The key is a UUID string.
+/// `militaryCampaigns.jsonl`. The `id` is a UUID.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -187,7 +187,7 @@ pub struct MilitaryCampaign {
 }
 record!(MilitaryCampaign, "militaryCampaigns.jsonl", String);
 
-/// `militaryCampaignObjectives.jsonl`. The key is a UUID string.
+/// `militaryCampaignObjectives.jsonl`. The `id` is a UUID.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -209,9 +209,7 @@ pub struct MilitaryCampaignObjective {
     pub issuer: Issuer,
     /// Raw JSON: ISK, loyalty point and standing rewards.
     pub rewards: Value,
-    /// Raw JSON.
     pub contribution_method_configuration: Value,
-    /// Raw JSON.
     pub annotations: Option<Value>,
 }
 record!(

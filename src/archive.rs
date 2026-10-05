@@ -36,8 +36,10 @@ pub(crate) fn limit_error(resource: impl Into<String>, limit: u64) -> Error {
     }
 }
 
-/// Bound actual output even if the ZIP or HTTP headers understate its size.
-/// `read_error` turns a failed read into the caller's error.
+/// Read build metadata of at most [`MAX_METADATA_BYTES`]. The limit counts
+/// the bytes actually read, so a ZIP or HTTP header that understates the size
+/// does not get around it. `read_error` turns a failed read into the caller's
+/// error.
 pub(crate) fn read_metadata(
     reader: impl Read,
     read_error: impl FnOnce(io::Error) -> Error,
@@ -53,13 +55,15 @@ pub(crate) fn read_metadata(
     Ok(text)
 }
 
-/// Which SDE build an archive holds, from its `_sde.jsonl`.
+/// Which SDE build an archive holds, or which build CCP says is the latest.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct BuildInfo {
+    /// CCP's number for the build, e.g. `3569502`. Later builds have higher
+    /// numbers.
     pub build_number: u32,
-    /// ISO 8601 timestamp, e.g. `2026-10-02T11:08:57Z`.
+    /// When CCP released the build, in ISO 8601, e.g. `2026-10-02T11:08:57Z`.
     pub release_date: Option<String>,
 }
 
@@ -101,12 +105,13 @@ pub struct Archive<R: Read + Seek> {
     zip: ZipArchive<R>,
     build: BuildInfo,
     max_bytes: u64,
+    /// Decompressed bytes that table reads may still use.
     #[cfg(feature = "load")]
     remaining: u64,
 }
 
 impl<R: Read + Seek> Archive<R> {
-    /// Open an archive and read its build number.
+    /// Open an archive, check its declared sizes and read its build.
     pub fn new(reader: R) -> Result<Self> {
         Self::with_limit(reader, MAX_ARCHIVE_BYTES)
     }
@@ -124,7 +129,7 @@ impl<R: Read + Seek> Archive<R> {
             }
         }
         let text = read_metadata(open(&mut zip, BUILD_FILE)?, |e| Error::read(BUILD_FILE, e))?;
-        // Recount actual bytes during reads. ZIP sizes are untrusted.
+        // The declared sizes can lie, so from here on count the bytes read.
         let remaining = max_bytes
             .checked_sub(text.len() as u64)
             .ok_or_else(|| limit_error("decompressed archive", max_bytes))?;
@@ -249,6 +254,8 @@ mod tests {
         }
         let mut bytes = writer.finish().unwrap().into_inner();
         if understate_sizes {
+            // Zero the uncompressed size in each local header (offset 22) and
+            // central directory entry (offset 24).
             let offsets: Vec<_> = bytes
                 .windows(4)
                 .enumerate()

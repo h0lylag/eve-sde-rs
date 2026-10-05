@@ -30,7 +30,8 @@ pub struct Type {
     pub base_price: Option<f64>,
     #[serde(rename = "marketGroupID")]
     pub market_group_id: Option<u32>,
-    /// Tech tier. Missing means Tech 1.
+    /// Meta group, such as Tech I, Tech II, Faction or Officer. Many items,
+    /// including some Tech I modules, leave it unset.
     #[serde(rename = "metaGroupID")]
     pub meta_group_id: Option<u32>,
     pub meta_level: Option<u32>,
@@ -52,7 +53,8 @@ pub struct Type {
     pub ship_tree_group_id: Option<u32>,
     #[serde(default)]
     pub is_repackable: bool,
-    /// Mutated items: attributes come per instance, see `DynamicItemAttributes`.
+    /// True for mutated items, whose attribute values differ per item. See
+    /// [`DynamicItemAttributes`].
     #[serde(default)]
     pub is_dynamic_type: bool,
 }
@@ -114,7 +116,7 @@ pub struct MarketGroup {
 }
 record!(MarketGroup, "marketGroups.jsonl");
 
-/// `metaGroups.jsonl`: Tech 1, Tech 2, Faction, Officer and so on.
+/// `metaGroups.jsonl`: Tech I, Tech II, Faction, Officer and so on.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -132,7 +134,7 @@ pub struct MetaGroup {
 }
 record!(MetaGroup, "metaGroups.jsonl");
 
-/// `typeDogma.jsonl`: attribute values and effects of one type.
+/// `typeDogma.jsonl`: the attribute values and effects of a type (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -163,7 +165,7 @@ pub struct TypeEffect {
     pub is_default: bool,
 }
 
-/// `typeMaterials.jsonl`: what reprocessing a type gives.
+/// `typeMaterials.jsonl`: what reprocessing a type (the `id`) gives.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -196,7 +198,8 @@ pub struct RandomMaterial {
     pub quantity_max: i64,
 }
 
-/// `typeBonus.jsonl`: the bonus lines shown on a ship's info window.
+/// `typeBonus.jsonl`: the bonus lines that the game shows for a type (the
+/// `id`), mostly ships, subsystems and structures.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -207,7 +210,7 @@ pub struct TypeBonuses {
     pub icon_id: Option<u32>,
     #[serde(default)]
     pub role_bonuses: Vec<Bonus>,
-    /// Per-skill bonuses, keyed by skill type.
+    /// Skill type ID to the bonuses that skill gives.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub types: BTreeMap<u32, Vec<Bonus>>,
     #[serde(default)]
@@ -228,12 +231,14 @@ pub struct Bonus {
     pub is_positive: Option<bool>,
 }
 
-/// `typeElements.jsonl`
+/// `typeElements.jsonl`: the ship tree tags of a ship type (the `id`), such
+/// as Small, Support and Shields.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct TypeElement {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// Order, from 1, to [`ShipTreeElement`] ID.
     #[serde(deserialize_with = "de::kv_map")]
     pub elements: BTreeMap<u32, u32>,
 }
@@ -266,7 +271,8 @@ pub struct TypeList {
 }
 record!(TypeList, "typeLists.jsonl");
 
-/// `compressibleTypes.jsonl`: ore → compressed ore.
+/// `compressibleTypes.jsonl`: what a type (the `id`), such as an ore, ice or
+/// gas, compresses into.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct CompressibleType {
@@ -277,7 +283,8 @@ pub struct CompressibleType {
 }
 record!(CompressibleType, "compressibleTypes.jsonl");
 
-/// `dynamicItemAttributes.jsonl`: how mutaplasmids change an item.
+/// `dynamicItemAttributes.jsonl`: how a mutaplasmid (the `id`) changes an
+/// item.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -309,7 +316,8 @@ pub struct DynamicMapping {
     pub resulting_type: u32,
 }
 
-/// `masteries.jsonl`: certificates needed per mastery level, by ship type.
+/// `masteries.jsonl`: the certificates needed for each mastery level of a
+/// ship type (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct Mastery {

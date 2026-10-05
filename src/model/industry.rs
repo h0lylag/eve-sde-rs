@@ -16,7 +16,8 @@ pub struct Blueprint {
 }
 record!(Blueprint, "blueprints.jsonl");
 
-/// What a blueprint can do. Missing means it can't.
+/// What a blueprint can do. An activity it cannot do is `None`.
+// No `rename_all`: this part of the file already uses snake_case names.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct BlueprintActivities {
@@ -48,7 +49,7 @@ pub struct Product {
     #[serde(rename = "typeID")]
     pub type_id: u32,
     pub quantity: i64,
-    /// Invention only.
+    /// The chance of success, for invention only.
     pub probability: Option<f64>,
 }
 
@@ -119,7 +120,8 @@ pub struct TypeListMultipliers {
     pub cost_multiplier: Option<f64>,
 }
 
-/// `industryInstallationTypes.jsonl`: which assembly lines a structure type has.
+/// `industryInstallationTypes.jsonl`: the assembly lines of a structure type
+/// (the `id`).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -137,8 +139,9 @@ pub struct AssemblyLineRef {
     pub assembly_line_id: u32,
 }
 
-/// `industryModifierSources.jsonl`: which attributes of a type change industry
-/// cost, time or material use. Section names are camelCase in this file.
+/// `industryModifierSources.jsonl`: which attributes of a type (the `id`)
+/// change industry cost, time or material use.
+// Unlike `blueprints.jsonl`, this file names the activities in camelCase.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]

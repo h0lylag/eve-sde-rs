@@ -10,6 +10,9 @@
 //!
 //! Writers coordinate through a persistent `.<filename>.lock` file beside
 //! the destination. Do not delete that file while any writer can use it.
+//!
+//! If a process dies during a download, its `.<filename>.part-…` file stays
+//! behind. You can delete it when no download is running.
 
 use crate::archive::{Archive, BuildInfo, limit_error, read_metadata};
 use crate::error::{Error, PathContext, Result, io_context};
@@ -25,7 +28,7 @@ use ureq::http::header::{ETAG, IF_NONE_MATCH};
 /// Where CCP publishes SDE builds.
 pub const BASE_URL: &str = "https://developers.eveonline.com/static-data/tranquility";
 
-/// Refuse downloads bigger than this. The SDE is about 100 MiB.
+/// Maximum size of a download: 512 MiB. The SDE ZIP is about 100 MB.
 pub const MAX_DOWNLOAD_BYTES: u64 = 512 * 1024 * 1024;
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -40,10 +43,11 @@ const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Latest {
-    /// The ETag you passed still matches; nothing changed.
+    /// The ETag you passed still matches, so nothing changed.
     Unchanged,
-    /// The latest build. Pass `etag` to the next [`Client::latest`] call so
-    /// CCP can answer "unchanged" without sending anything.
+    /// The latest build, and the ETag of this answer if the server sent one.
+    /// Pass `etag` to the next [`Client::latest`] call so that CCP can answer
+    /// [`Latest::Unchanged`] without sending the build again.
     Available {
         build: BuildInfo,
         etag: Option<String>,
@@ -54,9 +58,10 @@ pub enum Latest {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Update {
-    /// The local file is already the latest build (or newer).
+    /// The file already holds this build, which is the latest or newer.
     UpToDate(u32),
-    /// The file was missing or old and now holds build `to`.
+    /// The file was missing (`from` is `None`) or older, and now holds build
+    /// `to`.
     Updated { from: Option<u32>, to: u32 },
 }
 
@@ -79,7 +84,8 @@ pub struct Client {
 }
 
 impl Client {
-    /// `user_agent` identifies your app to CCP, e.g. `my-bot/1.2 (me@example.com)`.
+    /// `user_agent` identifies your app to CCP, e.g.
+    /// `my-bot/1.2 (me@example.com)`.
     pub fn new(user_agent: &str) -> Client {
         let agent = ureq::Agent::config_builder()
             .user_agent(user_agent)
@@ -95,14 +101,21 @@ impl Client {
         }
     }
 
-    /// Use another server instead of CCP's. For tests.
+    /// Use another server with the same layout instead of CCP's, such as a
+    /// mirror or a test server.
     pub fn with_base_url(mut self, base: impl Into<String>) -> Client {
         self.base = base.into().trim_end_matches('/').to_owned();
         self
     }
 
-    /// Ask for the latest build. CCP caches this answer for five minutes, so
-    /// polling more often is pointless.
+    /// Ask for the latest build. With the `etag` of an earlier answer, the
+    /// result is [`Latest::Unchanged`] if nothing changed. CCP caches this
+    /// answer for five minutes, so polling more often is pointless.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the request fails, the server answers with another status, or
+    /// the answer is not a build record or is too big.
     pub fn latest(&self, etag: Option<&str>) -> Result<Latest> {
         let url = format!("{}/latest.jsonl", self.base);
         let mut request = self
@@ -136,13 +149,20 @@ impl Client {
         }
     }
 
-    /// Download one build to `dest`, replacing it only once the new file checks
-    /// out. The folder of `dest` must exist.
-    /// This explicit request can replace a newer build. Use [`Client::update`]
-    /// to preserve newer builds installed by another writer.
+    /// Download build `build` to `dest`. The new file replaces `dest` only
+    /// after it is complete, undamaged and the right build. The folder of
+    /// `dest` must exist. Unlike [`Client::update`], this replaces `dest` even
+    /// if it holds a newer build.
     ///
-    /// `progress(bytes_so_far, total)` runs after each chunk; return
-    /// `ControlFlow::Break(())` to cancel with [`Error::Cancelled`].
+    /// `progress(bytes_so_far, total)` runs after each chunk. `total` is `None`
+    /// if the server does not send the size. Return `ControlFlow::Break(())`
+    /// to cancel with [`Error::Cancelled`].
+    ///
+    /// # Errors
+    ///
+    /// Fails if `dest` has no file name, the request fails, the download is
+    /// too big or damaged, it holds another build, `progress` cancels it, or
+    /// `dest` cannot be replaced. On failure `dest` stays as it was.
     pub fn download(
         &self,
         build: u32,
@@ -150,13 +170,15 @@ impl Client {
         progress: impl FnMut(u64, Option<u64>) -> ControlFlow<()>,
     ) -> Result<BuildInfo> {
         let dest = dest.as_ref();
+        let lock_file = lock_path(dest)?;
         let (temp, info) = self.fetch(build, dest, progress)?;
-        let _lock = lock_destination(dest)?;
+        let _guard = lock(&lock_file)?;
         temp.persist(dest)?;
         Ok(info)
     }
 
-    /// Download and validate before taking the destination lock.
+    /// Download and check a build without holding the lock, so a slow
+    /// download does not block other writers.
     fn fetch(
         &self,
         build: u32,
@@ -208,11 +230,19 @@ impl Client {
         Ok((temp, info))
     }
 
-    /// Make the file at `path` the latest build. A missing file counts as
-    /// "no build yet".
-    /// Concurrent updates never replace a newer build with an older one.
+    /// Make the file at `path` the latest build, downloading it only if `path`
+    /// is missing or older. Concurrent updates never replace a newer build
+    /// with an older one.
+    ///
+    /// # Errors
+    ///
+    /// Fails for the reasons listed under [`Client::latest`] and
+    /// [`Client::download`], and if `path` exists but is not a readable SDE
+    /// ZIP, because `update` never replaces a file it cannot identify. On
+    /// failure `path` stays as it was.
     pub fn update(&self, path: impl AsRef<Path>) -> Result<Update> {
         let path = path.as_ref();
+        let lock_file = lock_path(path)?;
         let local = local_build(path)?.map(|b| b.build_number);
         let Latest::Available { build, .. } = self.latest(None)? else {
             unreachable!("`latest` answers `Unchanged` only when given an ETag");
@@ -222,7 +252,8 @@ impl Client {
             _ => {
                 let (temp, _) =
                     self.fetch(build.build_number, path, |_, _| ControlFlow::Continue(()))?;
-                let _lock = lock_destination(path)?;
+                let _guard = lock(&lock_file)?;
+                // Another writer may have updated the file in the meantime.
                 let current = local_build(path)?.map(|b| b.build_number);
                 if let Some(have) = current
                     && have >= build.build_number
@@ -239,9 +270,9 @@ impl Client {
     }
 }
 
-/// Keep this file in place so every process locks the same file object.
-/// Closing the handle releases the lock, including during unwinding.
-fn lock_destination(dest: &Path) -> io::Result<File> {
+/// `.<filename>.lock` beside `dest`. Called first, so a destination without
+/// a file name fails before anything is downloaded.
+fn lock_path(dest: &Path) -> io::Result<PathBuf> {
     let filename = dest.file_name().ok_or_else(|| {
         let message = format!("destination `{}` needs a file name", dest.display());
         io::Error::new(io::ErrorKind::InvalidInput, message)
@@ -249,20 +280,26 @@ fn lock_destination(dest: &Path) -> io::Result<File> {
     let mut name = OsString::from(".");
     name.push(filename);
     name.push(".lock");
-    let path = dest.with_file_name(name);
+    Ok(dest.with_file_name(name))
+}
+
+/// Lock `path`, waiting while another writer holds it. The file is never
+/// deleted, so every process locks the same file. Dropping the handle
+/// releases the lock, even during a panic.
+fn lock(path: &Path) -> io::Result<File> {
     let file = File::options()
         .read(true)
         .write(true)
         .create(true)
         .truncate(false)
-        .open(&path)
-        .path_context("open", &path)?;
-    file.lock().path_context("lock", &path)?;
+        .open(path)
+        .path_context("open", path)?;
+    file.lock().path_context("lock", path)?;
     Ok(file)
 }
 
-/// Check the ZIP opens, has a build number, and every entry decompresses
-/// with a matching checksum.
+/// Check that the ZIP opens, has a build number, and that every entry
+/// decompresses with a matching checksum.
 fn verify(path: &Path) -> Result<BuildInfo> {
     let file = File::open(path).path_context("open", path)?;
     let mut archive = Archive::new(BufReader::new(file))?;

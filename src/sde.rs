@@ -25,16 +25,6 @@ macro_rules! tables {
         ///
         /// Each table has a read-only accessor, such as [`Sde::types`].
         /// Tables and their lookup indexes stay fixed after loading.
-        ///
-        /// ```compile_fail
-        /// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
-        /// sde.types().get_mut(&34).unwrap().name = "Changed".into();
-        /// ```
-        ///
-        /// ```compile_fail
-        /// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
-        /// sde.stargates.clear();
-        /// ```
         pub struct Sde {
             build: BuildInfo,
             unmodeled: Vec<String>,
@@ -51,7 +41,7 @@ macro_rules! tables {
 
         impl Sde {
             $(
-                #[doc = concat!("Read-only records from `", stringify!($field), "`, by ID.")]
+                #[doc = concat!("Every [`", stringify!($ty), "`] record, keyed by `id`.")]
                 pub fn $field(&self) -> &HashMap<key!($($id)?), $ty> {
                     &self.$field
                 }
@@ -173,6 +163,21 @@ tables! {
     types: Type,
 }
 
+/// Code outside the crate can neither change a table nor reach a table field
+/// directly.
+///
+/// ```compile_fail,E0596
+/// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
+/// sde.types().get_mut(&34).unwrap().name = "Changed".into();
+/// ```
+///
+/// ```compile_fail,E0616
+/// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
+/// sde.stargates.clear();
+/// ```
+#[cfg(doctest)]
+pub struct ReadOnlyTables;
+
 /// Sorted names of the table files that no model reads.
 fn unmodeled_files<R: Read + Seek>(archive: &Archive<R>) -> Vec<String> {
     let mut names: Vec<String> = archive
@@ -186,19 +191,38 @@ fn unmodeled_files<R: Read + Seek>(archive: &Archive<R>) -> Vec<String> {
 
 impl Sde {
     /// Read and index an SDE ZIP from disk. Takes a couple of seconds and a
-    /// few hundred MB of memory; load once and share the result.
+    /// few hundred MB of memory, so load once and share the result.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the file cannot be opened, or for any reason listed under
+    /// [`Sde::from_reader`].
     pub fn load(path: impl AsRef<Path>) -> Result<Sde> {
-        let path = path.as_ref();
-        let file = File::open(path).path_context("open", path)?;
-        Sde::from_reader(BufReader::new(file))
+        // Not generic, so the loader is compiled in this crate, not again
+        // (and unoptimized in debug builds) in every caller's.
+        fn load(path: &Path) -> Result<Sde> {
+            let file = File::open(path).path_context("open", path)?;
+            Sde::from_reader(BufReader::new(file))
+        }
+        load(path.as_ref())
     }
 
     /// Read and index an SDE ZIP already in memory.
+    ///
+    /// # Errors
+    ///
+    /// Fails for any reason listed under [`Sde::from_reader`].
     pub fn from_bytes(bytes: &[u8]) -> Result<Sde> {
         Sde::from_reader(Cursor::new(bytes))
     }
 
     /// Read and index an SDE ZIP from any seekable source.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the data is not an SDE ZIP, a table is missing or damaged, a
+    /// record does not parse, two records in a table share a key, or a size
+    /// limit is exceeded.
     pub fn from_reader<R: Read + Seek>(reader: R) -> Result<Sde> {
         let mut archive = Archive::new(reader)?;
         let mut sde = Sde::read_tables(&mut archive)?;
@@ -206,7 +230,7 @@ impl Sde {
         Ok(sde)
     }
 
-    /// The build this archive holds.
+    /// The build that was loaded.
     pub fn build(&self) -> &BuildInfo {
         &self.build
     }
@@ -218,7 +242,7 @@ impl Sde {
     }
 }
 
-/// Shows the build only; the tables are far too big to print.
+/// Shows the build only. The tables are far too big to print.
 impl fmt::Debug for Sde {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Sde")

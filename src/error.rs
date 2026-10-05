@@ -3,17 +3,17 @@ use std::fmt;
 use std::io;
 use std::path::Path;
 
-/// Everything that can go wrong while reading, loading or downloading the SDE.
+/// Everything that can go wrong while loading or downloading the SDE.
 ///
 /// Errors from the ZIP and HTTP libraries are boxed, so upgrading those
 /// libraries does not change this type. Downcast the box to reach them.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
-    /// Reading or writing a file failed, or a download broke off. The message
-    /// names the file or URL.
+    /// A file operation failed, or a download broke off. The message names
+    /// the file or URL.
     Io(io::Error),
-    /// The data is not a ZIP archive, or the archive's directory is damaged.
+    /// The data is not a ZIP archive, or the archive's structure is damaged.
     /// Damage inside one file is [`Error::Read`].
     Zip(Box<dyn StdError + Send + Sync>),
     /// The archive has no file with this name. Did CCP change the format?
@@ -21,26 +21,28 @@ pub enum Error {
     /// A file in the archive could not be read. `source` says why, e.g.
     /// `Invalid checksum` when the file is damaged.
     Read { file: String, source: io::Error },
-    /// A line failed to parse. `line` counts from 1.
+    /// A line of a file in the archive failed to parse. `line` counts from 1.
     Parse {
         file: String,
         line: usize,
         source: serde_json::Error,
     },
-    /// Two records in one file share a key.
+    /// Two records in one file of the archive share a key.
     DuplicateKey { file: String, key: String },
-    /// The archive or a response is not what we expected.
+    /// The archive or a server response is not in the expected format.
     Invalid(String),
-    /// Metadata, a record, the decompressed archive or a download exceeded a
-    /// byte limit. `resource` says which, e.g. `download`.
+    /// Build metadata, a record, the decompressed archive or a download is
+    /// bigger than its limit. `resource` says which, e.g. `download`, and
+    /// `limit` is the limit in bytes.
     LimitExceeded { resource: String, limit: u64 },
-    /// The request failed before a response arrived: DNS, TLS, a timeout, …
+    /// The request failed before a response arrived, e.g. because of DNS, TLS
+    /// or a timeout.
     #[cfg(feature = "download")]
     Http(Box<dyn StdError + Send + Sync>),
     /// The server answered with a status other than the one expected.
     #[cfg(feature = "download")]
     HttpStatus { url: String, status: u16 },
-    /// A downloaded archive has a different build than the one requested.
+    /// A downloaded archive holds another build than the one requested.
     #[cfg(feature = "download")]
     BuildMismatch { expected: u32, got: u32 },
     /// The progress callback asked to stop.
@@ -48,6 +50,7 @@ pub enum Error {
     Cancelled,
 }
 
+/// `Result` with this crate's [`Error`] as the default error type.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 impl Error {
@@ -123,8 +126,9 @@ impl From<io::Error> for Error {
     }
 }
 
-/// Says what the crate was doing when an I/O error happened, e.g. "cannot
-/// open `sde.zip`". The error keeps its kind, and its source is the original.
+/// Wrap an I/O error in a message that says what failed, e.g. "cannot open
+/// `sde.zip`". The result keeps the error's kind, and its source is the
+/// original error.
 pub(crate) fn io_context(source: io::Error, context: String) -> io::Error {
     io::Error::new(source.kind(), IoContext { context, source })
 }

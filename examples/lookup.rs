@@ -1,3 +1,5 @@
+//! Look up a name, or describe an ID.
+//!
 //! `cargo run --release --example lookup -- sde.zip Jita`
 //! `cargo run --release --example lookup -- sde.zip 587`
 

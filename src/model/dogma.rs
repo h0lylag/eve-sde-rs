@@ -179,14 +179,15 @@ pub struct SkillModifier {
     pub skill_id: u32,
 }
 
-/// `appliedProximityEffects.jsonl`
+/// `appliedProximityEffects.jsonl`: buffs that a type (the `id`), such as a
+/// Stasis Field Effect Subpylon, applies to ships near it.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct AppliedProximityEffect {
     #[serde(rename = "_key")]
     pub id: u32,
-    /// Dynamic buff ID to value.
+    /// [`DynamicBuff`] ID to value.
     #[serde(deserialize_with = "de::kv_map")]
     pub dbuffs: BTreeMap<u32, f64>,
     pub delay_seconds: i64,
@@ -194,13 +195,15 @@ pub struct AppliedProximityEffect {
 }
 record!(AppliedProximityEffect, "appliedProximityEffects.jsonl");
 
-/// `linkWithShip.jsonl`
+/// `linkWithShip.jsonl`: what happens when a ship links with a type (the
+/// `id`), such as a Skyhook Reagent Silo.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct LinkWithShip {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// [`DynamicBuff`] ID to value.
     #[serde(deserialize_with = "de::kv_map")]
     pub dbuffs: BTreeMap<u32, f64>,
     pub apply_pvp_flag: bool,
@@ -220,13 +223,15 @@ pub struct LinkWithShip {
 }
 record!(LinkWithShip, "linkWithShip.jsonl");
 
-/// `proximityTrap.jsonl`
+/// `proximityTrap.jsonl`: a trap type (the `id`), such as the AEGIS Proximity
+/// Mine.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct ProximityTrap {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// [`DynamicBuff`] ID to value.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub dbuffs: BTreeMap<u32, f64>,
     pub dbuff_duration: i64,
@@ -240,13 +245,15 @@ pub struct ProximityTrap {
 }
 record!(ProximityTrap, "proximityTrap.jsonl");
 
-/// `systemWideEffects.jsonl`
+/// `systemWideEffects.jsonl`: an effect type (the `id`) that covers a whole
+/// system, such as a wormhole effect.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct SystemWideEffect {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// [`DynamicBuff`] ID to value.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub dbuffs: BTreeMap<u32, f64>,
     #[serde(rename = "eligibleTypeListID")]
@@ -256,13 +263,15 @@ pub struct SystemWideEffect {
 }
 record!(SystemWideEffect, "systemWideEffects.jsonl");
 
-/// `systemDbuffEmitters.jsonl`
+/// `systemDbuffEmitters.jsonl`: buffs that a type (the `id`) applies to a
+/// whole system.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct SystemDbuffEmitter {
     #[serde(rename = "_key")]
     pub id: u32,
+    /// [`DynamicBuff`] ID to value.
     #[serde(deserialize_with = "de::kv_map")]
     pub dbuffs: BTreeMap<u32, f64>,
     pub duration: i64,

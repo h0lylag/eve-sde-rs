@@ -19,7 +19,7 @@ pub struct Race {
     pub icon_id: Option<u32>,
     #[serde(rename = "shipTypeID")]
     pub ship_type_id: Option<u32>,
-    /// Starting skill type to level.
+    /// Skill type ID to starting level.
     #[serde(default, deserialize_with = "de::kv_map")]
     pub skills: BTreeMap<u32, u32>,
 }
@@ -105,7 +105,7 @@ pub struct School {
 }
 record!(School, "schools.jsonl");
 
-/// `schoolMap.jsonl`
+/// `schoolMap.jsonl`: the solar system of each school.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct SchoolMap {
@@ -135,7 +135,7 @@ pub struct CharacterAttribute {
 }
 record!(CharacterAttribute, "characterAttributes.jsonl");
 
-/// `characterTitles.jsonl`. The key is a UUID string.
+/// `characterTitles.jsonl`. The `id` is a UUID.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct CharacterTitle {
@@ -146,7 +146,8 @@ pub struct CharacterTitle {
 }
 record!(CharacterTitle, "characterTitles.jsonl", String);
 
-/// `cloneGrades.jsonl`
+/// `cloneGrades.jsonl`: an Alpha clone grade, such as Alpha Caldari, and the
+/// skill levels it can train.
 #[derive(Debug, Clone, Deserialize)]
 #[non_exhaustive]
 pub struct CloneGrade {
