@@ -61,3 +61,10 @@ cargo run --release --features download --example update -- sde.zip
 
 `eve_sde::ids::kind(id)` tells you what kind of thing an ID is (type,
 system, station, player-owned, whatever) just from its numeric range.
+
+## Disclaimer
+
+EVE Online is the registered trademarks of Fenris Creations. This crate is not affiliated with or endorsed by Fenris
+Creations. The Static Data Export is their data and is subject to the
+[EVE Online Developer License Agreement](https://developers.eveonline.com/license-agreement);
+this crate contains none of it.
