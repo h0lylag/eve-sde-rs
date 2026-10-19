@@ -3,7 +3,8 @@
 //!
 //! [`import`] writes every file of an archive into a new store file in a
 //! folder. With the `download` feature, [`update`] first downloads the latest
-//! build into the same folder. [`Sde::open_sqlite`](crate::Sde::open_sqlite)
+//! build into the same folder, and [`update_with_progress`] reports each step
+//! of it, such as for a progress bar. [`Sde::open_sqlite`](crate::Sde::open_sqlite)
 //! then opens the newest store with every lookup of [`Sde`](crate::Sde), and
 //! [`Store::open`] opens it for queries of your own.
 //!
@@ -90,6 +91,7 @@ use crate::archive::{Archive, BuildInfo};
 use crate::error::{Error, PathContext, Result, io_context};
 use crate::ids::StationId;
 use crate::model::NpcStation;
+use crate::parts;
 use crate::sde::{Named, Preferred, Relation, Source, name_key, naming};
 use crate::tables::sealed::{Sealed, SealedKey};
 use crate::tables::{KeyKind, Record, tables};
@@ -102,8 +104,9 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::fs::{self, DirEntry, OpenOptions};
 use std::io::{self, Read, Seek};
+#[cfg(feature = "download")]
+use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
 /// The `rusqlite` this crate uses. A program can link only one version of
 /// SQLite, so use this one, or the same version, for queries of your own.
@@ -129,10 +132,6 @@ const LANGUAGES: [&str; 9] = ["de", "en", "es", "fr", "it", "ja", "ko", "ru", "z
 /// The store's own tables. No SDE table may take their names.
 const STATE_TABLE: &str = "sde_state";
 const TABLES_TABLE: &str = "sde_tables";
-
-/// How old a temporary file must be before an import deletes it as one left
-/// behind by an import that died.
-const STALE_PART: Duration = Duration::from_secs(60 * 60);
 
 /// What [`import`] or [`update`] did.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -171,36 +170,142 @@ pub fn import<R: Read + Seek>(
     import_into(archive, dir.as_ref())
 }
 
-/// Download the latest build into `dir`, then [`import`] it.
+/// A step of [`update_with_progress`], reported when it starts and as the
+/// download goes on.
+#[cfg(feature = "download")]
+#[cfg_attr(docsrs, doc(cfg(feature = "download")))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum Step {
+    /// Asking CCP for the latest build.
+    Checking,
+    /// Downloading a build into [`ZIP_FILE`].
+    Downloading {
+        /// The build being downloaded.
+        build: u32,
+        /// The bytes received so far.
+        received: u64,
+        /// The size of the download, if the server sent it.
+        total: Option<u64>,
+    },
+    /// Importing a build into a new store. It cannot be cancelled.
+    Importing {
+        /// The build being imported.
+        build: u32,
+    },
+}
+
+/// Bring the store in `dir` up to the latest build: download it, then
+/// [`import`] it.
 ///
-/// The ZIP is kept as [`ZIP_FILE`], so the next update downloads only a newer
-/// build, and a store of a new [`LAYOUT_VERSION`] can be imported from it
-/// again.
+/// Nothing is downloaded if `dir` already holds a store of the latest build
+/// or a newer one, or if [`ZIP_FILE`] already holds the latest build. The ZIP
+/// is kept, so a store of a new [`LAYOUT_VERSION`] can be imported from it
+/// without a download. A [`ZIP_FILE`] that is not a readable SDE ZIP is
+/// downloaded again.
 ///
 /// # Errors
 ///
-/// Fails for the reasons listed under
-/// [`Client::update`](crate::download::Client::update) and [`import`].
+/// Fails if `dir` cannot be created or read, for the reasons listed under
+/// [`Client::latest`](crate::download::Client::latest) and
+/// [`Client::download`](crate::download::Client::download), and for those
+/// listed under [`import`]. On failure the store stays as it was.
 #[cfg(feature = "download")]
 #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
 pub fn update(client: &crate::download::Client, dir: impl AsRef<Path>) -> Result<ImportOutcome> {
-    fn update(client: &crate::download::Client, dir: &Path) -> Result<ImportOutcome> {
-        fs::create_dir_all(dir).path_context("create", dir)?;
-        let zip = dir.join(ZIP_FILE);
-        client.update(&zip)?;
-        let mut archive = Archive::open(&zip)?;
-        import_into(&mut archive, dir)
+    update_with_progress(client, dir, |_| ControlFlow::Continue(()))
+}
+
+/// Like [`update`], reporting each [`Step`] to `progress`, such as for a
+/// progress bar.
+///
+/// `progress` sees [`Step::Checking`] first, [`Step::Downloading`] after each
+/// chunk of a download, and [`Step::Importing`] before the import. If it
+/// returns `ControlFlow::Break(())`, the update stops with
+/// [`Error::Cancelled`] and the store and [`ZIP_FILE`] stay as they were. The
+/// import cannot be cancelled once it has begun.
+///
+/// ```no_run
+/// use eve_sde::download::Client;
+/// use eve_sde::sqlite::{self, Step};
+/// use std::ops::ControlFlow;
+///
+/// let client = Client::new("my-app/1.0");
+/// sqlite::update_with_progress(&client, "sde", |step| {
+///     if let Step::Downloading { received, total: Some(total), .. } = step {
+///         println!("{}%", received * 100 / total);
+///     }
+///     ControlFlow::Continue(())
+/// })?;
+/// # Ok::<(), eve_sde::Error>(())
+/// ```
+///
+/// # Errors
+///
+/// Fails for the reasons listed under [`update`], and with
+/// [`Error::Cancelled`] if `progress` asks to stop.
+#[cfg(feature = "download")]
+#[cfg_attr(docsrs, doc(cfg(feature = "download")))]
+pub fn update_with_progress(
+    client: &crate::download::Client,
+    dir: impl AsRef<Path>,
+    mut progress: impl FnMut(Step) -> ControlFlow<()>,
+) -> Result<ImportOutcome> {
+    update_dir(client, dir.as_ref(), &mut progress)
+}
+
+#[cfg(feature = "download")]
+fn update_dir(
+    client: &crate::download::Client,
+    dir: &Path,
+    progress: &mut dyn FnMut(Step) -> ControlFlow<()>,
+) -> Result<ImportOutcome> {
+    fs::create_dir_all(dir).path_context("create", dir)?;
+    if progress(Step::Checking).is_break() {
+        return Err(Error::Cancelled);
     }
-    update(client, dir.as_ref())
+    let build = client.latest_build()?;
+    if let Some(outcome) = already_holds(dir, build)? {
+        return Ok(outcome);
+    }
+    let zip = dir.join(ZIP_FILE);
+    let mut downloading = |received: u64, total: Option<u64>| {
+        progress(Step::Downloading {
+            build,
+            received,
+            total,
+        })
+    };
+    if crate::download::local_build(&zip).is_ok() {
+        client.update_path(&zip, Some(build), &mut downloading)?;
+    } else {
+        // The ZIP is this module's own file, so one that cannot be read is
+        // replaced rather than kept.
+        client.download(build, &zip, &mut downloading)?;
+    }
+    let mut archive = Archive::open(&zip)?;
+    let build = archive.build().build_number;
+    if progress(Step::Importing { build }).is_break() {
+        return Err(Error::Cancelled);
+    }
+    import_into(&mut archive, dir)
+}
+
+/// What an import of `build` into `dir` returns without importing: `Some` if
+/// `dir` already holds a store of that build or a newer one.
+fn already_holds(dir: &Path, build: u32) -> Result<Option<ImportOutcome>> {
+    Ok(match newest_store(dir)? {
+        Some((have, _)) if have == build => Some(ImportOutcome::UpToDate),
+        Some((have, _)) if have > build => Some(ImportOutcome::OlderRefused),
+        _ => None,
+    })
 }
 
 fn import_into<R: Read + Seek>(archive: &mut Archive<R>, dir: &Path) -> Result<ImportOutcome> {
     let build = archive.build().build_number;
     fs::create_dir_all(dir).path_context("create", dir)?;
-    match newest_store(dir)? {
-        Some((have, _)) if have == build => return Ok(ImportOutcome::UpToDate),
-        Some((have, _)) if have > build => return Ok(ImportOutcome::OlderRefused),
-        _ => {}
+    if let Some(outcome) = already_holds(dir, build)? {
+        return Ok(outcome);
     }
 
     let name = file_name(build);
@@ -889,17 +994,9 @@ fn remove_obsolete(dir: &Path, build: u32) {
     }
 }
 
-/// Whether `entry` is a temporary file of an import that died: one that has
-/// not changed for [`STALE_PART`].
+/// Whether `entry` is a temporary file of an import that died.
 fn is_stale_part(name: &str, entry: &DirEntry) -> bool {
-    name.starts_with(".sde-")
-        && name.contains(".sqlite.part-")
-        && entry
-            .metadata()
-            .and_then(|metadata| metadata.modified())
-            .ok()
-            .and_then(|modified| modified.elapsed().ok())
-            .is_some_and(|age| age > STALE_PART)
+    name.starts_with(".sde-") && name.contains(".sqlite.part-") && parts::is_stale(entry)
 }
 
 #[cfg(test)]

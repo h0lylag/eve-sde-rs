@@ -129,6 +129,9 @@ let sde = Sde::open_sqlite("sde")?;               // the same lookups as above
 let jita = sde.system_id("Jita")?;
 ```
 
+`sqlite::update_with_progress` does the same and reports each step, such as
+for a progress bar, and can be cancelled until the import begins.
+
 Importing a whole SDE takes about 6 s and makes a file of about 420 MB. Each
 build gets its own file, so an update never touches a store that another
 process has open.

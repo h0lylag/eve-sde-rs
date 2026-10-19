@@ -22,7 +22,7 @@ use std::ops::ControlFlow;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, mpsc};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 struct Request {
     path: String,
@@ -532,4 +532,148 @@ fn sqlite_update_downloads_then_imports_the_latest_build() {
         store.get::<Type>(TypeId(587)).unwrap().unwrap().name,
         "Rifter"
     );
+}
+
+#[test]
+fn update_reports_progress_and_can_be_cancelled() {
+    let dir = tempfile::tempdir().unwrap();
+    let dest = dir.path().join("sde.zip");
+    let zip = build_only_zip(5);
+    let size = u64::try_from(zip.len()).unwrap();
+    let client = client(&release_server(5, vec![(5, zip)]));
+
+    let err = client
+        .update_with_progress(&dest, |_, _| ControlFlow::Break(()))
+        .unwrap_err();
+    assert!(matches!(err, Error::Cancelled));
+    assert_eq!(local_build(&dest).unwrap(), None);
+
+    let mut seen = Vec::new();
+    let update = client.update_with_progress(&dest, |received, total| {
+        seen.push((received, total));
+        ControlFlow::Continue(())
+    });
+    assert_eq!(update.unwrap(), Update::Updated { from: None, to: 5 });
+    assert_eq!(seen.last(), Some(&(size, Some(size))));
+}
+
+#[test]
+fn a_download_deletes_what_downloads_that_died_left_behind() {
+    let dir = tempfile::tempdir().unwrap();
+    let dest = dir.path().join("sde.zip");
+    let hours_ago = SystemTime::now() - Duration::from_secs(2 * 60 * 60);
+    for name in [
+        ".sde.zip.part-dead",
+        ".sde.zip.part-live",
+        ".other.zip.part-dead",
+    ] {
+        let file = std::fs::File::create(dir.path().join(name)).unwrap();
+        if name.ends_with("dead") {
+            file.set_modified(hours_ago).unwrap();
+        }
+    }
+    let client = client(&release_server(2, vec![(2, build_only_zip(2))]));
+    client.update(&dest).unwrap();
+    // Only this destination's parts that no download still writes.
+    assert_eq!(
+        file_names(dir.path()),
+        [
+            ".other.zip.part-dead",
+            ".sde.zip.lock",
+            ".sde.zip.part-live",
+            "sde.zip"
+        ]
+    );
+}
+
+#[cfg(feature = "sqlite")]
+#[test]
+fn sqlite_update_reports_each_step_and_downloads_only_what_it_lacks() {
+    use eve_sde::sqlite::{self, ImportOutcome, Step};
+
+    let client = client(&release_server(
+        7,
+        vec![(7, ArchiveBuilder::new(7).into_bytes())],
+    ));
+    let dir = tempfile::tempdir().unwrap();
+    let update = || {
+        let mut steps = Vec::new();
+        let outcome = sqlite::update_with_progress(&client, dir.path(), |step| {
+            steps.push(step);
+            ControlFlow::Continue(())
+        });
+        (outcome.unwrap(), steps)
+    };
+
+    let (outcome, steps) = update();
+    assert_eq!(outcome, ImportOutcome::Imported);
+    assert_eq!(steps.first(), Some(&Step::Checking));
+    assert!(matches!(steps[1], Step::Downloading { build: 7, .. }));
+    assert_eq!(steps.last(), Some(&Step::Importing { build: 7 }));
+
+    // A store of the latest build needs no download, even without the ZIP.
+    std::fs::remove_file(dir.path().join(sqlite::ZIP_FILE)).unwrap();
+    assert_eq!(update(), (ImportOutcome::UpToDate, vec![Step::Checking]));
+    assert!(!dir.path().join(sqlite::ZIP_FILE).exists());
+}
+
+#[cfg(feature = "sqlite")]
+#[test]
+fn sqlite_update_can_be_cancelled_until_the_import_begins() {
+    use eve_sde::sqlite::{self, ImportOutcome, Step, Store};
+
+    let client = client(&release_server(
+        7,
+        vec![(7, ArchiveBuilder::new(7).into_bytes())],
+    ));
+    let dir = tempfile::tempdir().unwrap();
+    let zip = dir.path().join(sqlite::ZIP_FILE);
+    let stop_at = |stop: fn(&Step) -> bool| {
+        sqlite::update_with_progress(&client, dir.path(), |step| {
+            if stop(&step) {
+                ControlFlow::Break(())
+            } else {
+                ControlFlow::Continue(())
+            }
+        })
+    };
+
+    let downloading = stop_at(|step| matches!(step, Step::Downloading { .. }));
+    assert!(matches!(downloading, Err(Error::Cancelled)));
+    assert!(!zip.exists());
+    let importing = stop_at(|step| matches!(step, Step::Importing { .. }));
+    assert!(matches!(importing, Err(Error::Cancelled)));
+    assert!(zip.exists());
+    assert!(matches!(
+        Store::open(dir.path()),
+        Err(Error::NoStore { .. })
+    ));
+
+    // The next update imports the ZIP it already has.
+    let mut steps = Vec::new();
+    let outcome = sqlite::update_with_progress(&client, dir.path(), |step| {
+        steps.push(step);
+        ControlFlow::Continue(())
+    });
+    assert_eq!(outcome.unwrap(), ImportOutcome::Imported);
+    assert_eq!(steps, [Step::Checking, Step::Importing { build: 7 }]);
+}
+
+#[cfg(feature = "sqlite")]
+#[test]
+fn sqlite_update_downloads_an_unreadable_zip_again() {
+    use eve_sde::sqlite::{self, ImportOutcome};
+
+    let dir = tempfile::tempdir().unwrap();
+    let zip = dir.path().join(sqlite::ZIP_FILE);
+    std::fs::write(&zip, "not a zip").unwrap();
+    let client = client(&release_server(
+        7,
+        vec![(7, ArchiveBuilder::new(7).into_bytes())],
+    ));
+    assert_eq!(
+        sqlite::update(&client, dir.path()).unwrap(),
+        ImportOutcome::Imported
+    );
+    assert_eq!(local_build(&zip).unwrap().unwrap().build_number, 7);
 }

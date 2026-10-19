@@ -12,12 +12,14 @@
 //! the destination. Do not delete that file while any writer can use it.
 //!
 //! If a process dies during a download, its `.<filename>.part-…` file stays
-//! behind. You can delete it when no download is running.
+//! behind. The next download to the same destination deletes it once it has
+//! not changed for an hour.
 
 use crate::archive::{Archive, BuildInfo, limit_error, read_metadata};
 use crate::error::{Error, PathContext, Result, io_context};
+use crate::parts;
 use std::ffi::OsString;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Write};
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
@@ -198,6 +200,7 @@ impl Client {
         dest: &Path,
         progress: &mut dyn FnMut(u64, Option<u64>) -> ControlFlow<()>,
     ) -> Result<(NamedTempFile, BuildInfo)> {
+        remove_stale_parts(dest);
         let url = format!("{}/eve-online-static-data-{build}-jsonl.zip", self.base);
         let response = self.agent.get(&url).call().map_err(Error::http)?;
         let status = response.status().as_u16();
@@ -258,38 +261,66 @@ impl Client {
     /// ZIP, because `update` never replaces a file it cannot identify. On
     /// failure `path` stays as it was.
     pub fn update(&self, path: impl AsRef<Path>) -> Result<Update> {
-        self.update_path(path.as_ref())
+        self.update_with_progress(path, |_, _| ControlFlow::Continue(()))
     }
 
-    fn update_path(&self, path: &Path) -> Result<Update> {
-        let lock_file = lock_path(path)?;
-        let local = local_build(path)?.map(|b| b.build_number);
-        let build = match self.latest(None)? {
-            Latest::Available { build, .. } => build,
+    /// Like [`Client::update`], reporting the download to `progress` as
+    /// [`Client::download`] does.
+    ///
+    /// # Errors
+    ///
+    /// Fails for the reasons listed under [`Client::update`], and with
+    /// [`Error::Cancelled`] if `progress` cancels the download.
+    pub fn update_with_progress(
+        &self,
+        path: impl AsRef<Path>,
+        mut progress: impl FnMut(u64, Option<u64>) -> ControlFlow<()>,
+    ) -> Result<Update> {
+        self.update_path(path.as_ref(), None, &mut progress)
+    }
+
+    /// The latest build's number.
+    pub(crate) fn latest_build(&self) -> Result<u32> {
+        match self.latest(None)? {
+            Latest::Available { build, .. } => Ok(build.build_number),
             Latest::Unchanged => {
                 unreachable!("`latest` answers `Unchanged` only when given an ETag")
             }
+        }
+    }
+
+    /// Make `path` hold `build`, or the latest build if `build` is `None`,
+    /// unless it holds that build or a newer one.
+    pub(crate) fn update_path(
+        &self,
+        path: &Path,
+        build: Option<u32>,
+        progress: &mut dyn FnMut(u64, Option<u64>) -> ControlFlow<()>,
+    ) -> Result<Update> {
+        let lock_file = lock_path(path)?;
+        let local = local_build(path)?.map(|b| b.build_number);
+        let build = match build {
+            Some(build) => build,
+            None => self.latest_build()?,
         };
         if let Some(have) = local
-            && have >= build.build_number
+            && have >= build
         {
             return Ok(Update::UpToDate(have));
         }
-        let (temp, _) = self.fetch(build.build_number, path, &mut |_, _| {
-            ControlFlow::Continue(())
-        })?;
+        let (temp, _) = self.fetch(build, path, progress)?;
         let _guard = lock(&lock_file)?;
         // Another writer may have updated the file in the meantime.
         let current = local_build(path)?.map(|b| b.build_number);
         if let Some(have) = current
-            && have >= build.build_number
+            && have >= build
         {
             return Ok(Update::UpToDate(have));
         }
         persist(temp, path)?;
         Ok(Update::Updated {
             from: current,
-            to: build.build_number,
+            to: build,
         })
     }
 }
@@ -337,20 +368,47 @@ fn verify(path: &Path) -> Result<BuildInfo> {
 /// A new file `.<filename>.part-<random>` beside `dest`. It deletes itself
 /// unless persisted, and is never a symlink or an existing file.
 fn temp_file_next_to(dest: &Path) -> Result<NamedTempFile> {
-    let name = dest
-        .file_name()
-        .map_or_else(|| "sde".into(), |n| n.to_string_lossy());
-    let dir = match dest.parent() {
-        Some(dir) if !dir.as_os_str().is_empty() => dir,
-        _ => Path::new("."),
-    };
+    let dir = folder_of(dest);
     tempfile::Builder::new()
-        .prefix(&format!(".{name}.part-"))
+        .prefix(&part_prefix(dest))
         .tempfile_in(dir)
         .map_err(|e| {
             let context = format!("cannot create a temporary file in `{}`", dir.display());
             Error::Io(io_context(e, context))
         })
+}
+
+/// The folder of `dest`, which is `.` for a bare file name.
+fn folder_of(dest: &Path) -> &Path {
+    match dest.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir,
+        _ => Path::new("."),
+    }
+}
+
+/// `.<filename>.part-`, the start of the name of a download's temporary file.
+fn part_prefix(dest: &Path) -> String {
+    let name = dest
+        .file_name()
+        .map_or_else(|| "sde".into(), |n| n.to_string_lossy());
+    format!(".{name}.part-")
+}
+
+/// Delete the temporary files that downloads which died left beside `dest`.
+/// Best effort: a file that cannot be deleted, such as one that another
+/// process has open on Windows, stays for the next download.
+fn remove_stale_parts(dest: &Path) {
+    let prefix = part_prefix(dest);
+    let Ok(entries) = fs::read_dir(folder_of(dest)) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let is_part = name.to_str().is_some_and(|name| name.starts_with(&prefix));
+        if is_part && parts::is_stale(&entry) {
+            let _ = fs::remove_file(entry.path());
+        }
+    }
 }
 
 /// Move the finished download to `dest`, replacing what is there.

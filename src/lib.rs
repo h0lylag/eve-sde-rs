@@ -81,6 +81,8 @@ mod error;
     reason = "the models mirror CCP's records, which hold many independent flags"
 )]
 pub mod model;
+#[cfg(any(feature = "download", feature = "sqlite"))]
+mod parts;
 #[cfg(feature = "archive")]
 mod sde;
 #[cfg(feature = "archive")]
