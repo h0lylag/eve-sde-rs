@@ -2,7 +2,7 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::io;
 use std::path::Path;
-#[cfg(feature = "sqlite")]
+#[cfg(any(feature = "sqlite", feature = "store"))]
 use std::path::PathBuf;
 
 /// Everything that can go wrong while reading, downloading or storing the
@@ -88,18 +88,18 @@ pub enum Error {
     #[cfg(feature = "sqlite")]
     #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
     Sqlite(Box<dyn StdError + Send + Sync>),
-    /// The folder holds no SQLite store of this version's layout. Fill it
-    /// with [`sqlite::import`](crate::sqlite::import).
-    #[cfg(feature = "sqlite")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    /// The folder holds no store of this version's layout. Fill it with an
+    /// import.
+    #[cfg(any(feature = "sqlite", feature = "store"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite", feature = "store"))))]
     NoStore {
         /// The folder.
         dir: PathBuf,
     },
-    /// A record in the SQLite store does not fit its model. Did CCP change
-    /// the format?
-    #[cfg(feature = "sqlite")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    /// A record in a store does not fit its model. Did CCP change the
+    /// format?
+    #[cfg(any(feature = "sqlite", feature = "store"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite", feature = "store"))))]
     Decode {
         /// The table.
         table: String,
@@ -177,9 +177,9 @@ impl fmt::Display for Error {
             Self::Cancelled => f.write_str("download cancelled"),
             #[cfg(feature = "sqlite")]
             Self::Sqlite(e) => e.fmt(f),
-            #[cfg(feature = "sqlite")]
+            #[cfg(any(feature = "sqlite", feature = "store"))]
             Self::NoStore { dir } => write!(f, "no SDE store in `{}`", dir.display()),
-            #[cfg(feature = "sqlite")]
+            #[cfg(any(feature = "sqlite", feature = "store"))]
             Self::Decode { table, key, .. } => {
                 write!(f, "cannot parse record {key} of table `{table}`")
             }
@@ -198,11 +198,25 @@ impl StdError for Error {
             Self::Http(e) => e.source(),
             #[cfg(feature = "sqlite")]
             Self::Sqlite(e) => e.source(),
-            #[cfg(feature = "sqlite")]
+            #[cfg(any(feature = "sqlite", feature = "store"))]
             Self::Decode { source, .. } => Some(source.as_ref()),
             _ => None,
         }
     }
+}
+
+/// A message naming an error and every cause under it, for a store that has
+/// to record why it could not name the stations.
+#[cfg(any(feature = "sqlite", feature = "store"))]
+pub(crate) fn error_chain(error: &Error) -> String {
+    let mut text = error.to_string();
+    let mut source = StdError::source(error);
+    while let Some(cause) = source {
+        text.push_str(": ");
+        text.push_str(&cause.to_string());
+        source = cause.source();
+    }
+    text
 }
 
 /// Wrap an I/O error in a message that says what failed, e.g. "cannot open

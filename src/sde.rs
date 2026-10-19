@@ -7,13 +7,13 @@ pub(crate) mod naming;
 
 use crate::archive::{Archive, BuildInfo};
 use crate::error::Result;
-#[cfg(feature = "sqlite")]
+#[cfg(any(feature = "sqlite", feature = "store"))]
 use crate::model::{
     Attribute, Category, Constellation, Effect, Faction, Group, MarketGroup, NpcCorporation,
     NpcStation, Region, SolarSystem, Type,
 };
 use crate::tables::Record;
-#[cfg(feature = "sqlite")]
+#[cfg(any(feature = "sqlite", feature = "store"))]
 use crate::tables::sealed::Sealed;
 use std::borrow::Borrow;
 use std::fmt;
@@ -22,7 +22,7 @@ use std::path::Path;
 #[cfg(feature = "sqlite")]
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
-/// The SDE, held in memory or in a SQLite store, with the same lookups
+/// The SDE, held in memory or in a store on disk, with the same lookups
 /// either way.
 ///
 /// ```no_run
@@ -30,8 +30,10 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 /// use eve_sde::ids::{SystemId, TypeId};
 ///
 /// let sde = Sde::load("sde.zip")?; // every table in memory
+/// # #[cfg(feature = "store")]
+/// let sde = Sde::open_store("sde")?; // or the newest store in a folder
 /// # #[cfg(feature = "sqlite")]
-/// let sde = Sde::open_sqlite("sde")?; // or the newest SQLite store in a folder
+/// let sde = Sde::open_sqlite("sde")?; // or the newest SQLite one
 ///
 /// sde.type_id("Tritanium")?; // Some(TypeId(34))
 /// sde.system_id("Jita")?; // Some(SystemId(30_000_142))
@@ -42,25 +44,27 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 /// ```
 ///
 /// [`Sde::load`] reads every table into memory, which takes about 1.6 s and
-/// 350 MiB for a whole SDE. [`Sde::open_sqlite`], with the `sqlite` feature,
-/// opens a store that [`sqlite::import`](crate::sqlite::import) or
-/// [`sqlite::update`](crate::sqlite::update) filled, in under a millisecond
-/// and a few MiB.
+/// 350 MiB for a whole SDE. [`Sde::open_store`] and [`Sde::open_sqlite`]
+/// instead open a store that an import filled, in well under a millisecond
+/// and a few MiB, and read records from it as the lookups ask for them.
 ///
 /// Lookups return owned values, because a store cannot lend out its rows.
 /// An `Sde` is `Send` and `Sync`, so threads can share one through an
-/// `Arc`.
+/// `Arc`. A packed store needs no lock for that; a SQLite one is behind a
+/// mutex, so its lookups take turns.
 ///
 /// # Errors
 ///
-/// Every lookup returns a `Result`. In memory it never fails. A SQLite store
-/// fails with [`Error::Sqlite`](crate::Error::Sqlite) if it cannot be read,
-/// and with [`Error::Decode`](crate::Error::Decode) if a record does not fit
-/// its model, which happens when CCP changes the format before this crate
-/// catches up. If the import could not name the NPC stations for that
-/// reason, the station name searches fail with
-/// [`Error::Invalid`](crate::Error::Invalid); see
-/// [Format changes](crate::sqlite#format-changes).
+/// Every lookup returns a `Result`. In memory it never fails. A store on
+/// disk fails with [`Error::Io`](crate::Error::Io) or
+/// [`Error::Sqlite`](crate::Error::Sqlite) if it cannot be read, and with
+/// [`Error::Decode`](crate::Error::Decode) if a record does not fit its
+/// model, which happens when CCP changes the format before this crate
+/// catches up. It fails with [`Error::Invalid`](crate::Error::Invalid) for a
+/// question it cannot answer rather than answering nothing: a table or an
+/// index the store does not hold, keys of a shape the models do not expect,
+/// or station names an import could not build. See
+/// [Format changes](crate::store#format-changes).
 pub struct Sde {
     build: BuildInfo,
     backend: Backend,
@@ -69,7 +73,10 @@ pub struct Sde {
 enum Backend {
     Memory(Box<memory::Memory>),
     #[cfg(feature = "sqlite")]
-    Sqlite(Mutex<crate::sqlite::Store>),
+    Sqlite(Box<Mutex<crate::sqlite::Store>>),
+    /// No lock: a packed store reads positionally, so it is `Sync`.
+    #[cfg(feature = "store")]
+    Store(Box<crate::store::Store>),
 }
 
 impl Sde {
@@ -114,10 +121,49 @@ impl Sde {
         Ok(Self::from(crate::sqlite::Store::open(dir)?))
     }
 
+    /// Open the newest packed store in `dir`, as
+    /// [`Store::open`](crate::store::Store::open) does.
+    ///
+    /// Build one from a [`store::Store`](crate::store::Store) with
+    /// [`Sde::from`] instead to keep what only the store itself offers, such
+    /// as [`verify`](crate::store::Store::verify). The newer stores it
+    /// passed over are [`Sde::skipped`].
+    ///
+    /// # Errors
+    ///
+    /// Fails for the reasons listed under
+    /// [`Store::open`](crate::store::Store::open).
+    #[cfg(feature = "store")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "store")))]
+    pub fn open_store(dir: impl AsRef<Path>) -> Result<Self> {
+        Ok(Self::from(crate::store::Store::open(dir)?))
+    }
+
     /// The build this SDE holds.
     #[must_use]
     pub fn build(&self) -> &BuildInfo {
         &self.build
+    }
+
+    /// The newer stores that [`Sde::open_store`] passed over because they
+    /// would not open, newest first, as
+    /// [`Store::skipped`](crate::store::Store::skipped) reports them.
+    ///
+    /// Not empty means this SDE is not the newest build its folder holds,
+    /// and the newer file is damaged. Reading on is safe, but it is worth
+    /// telling someone, and an import of the newer build replaces the bad
+    /// file. Always empty for an SDE held in memory or in SQLite, and for a
+    /// packed store opened by its path.
+    #[cfg(feature = "store")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "store")))]
+    #[must_use]
+    pub fn skipped(&self) -> &[crate::store::Skipped] {
+        match &self.backend {
+            Backend::Store(store) => store.skipped(),
+            Backend::Memory(_) => &[],
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(_) => &[],
+        }
     }
 
     /// The record of `T` with this key, or `None` if there is none.
@@ -142,24 +188,48 @@ impl Sde {
     /// The tables in this SDE that this crate has no model for, by file
     /// name. Not empty means CCP added a table this version does not know.
     ///
-    /// # Errors
-    ///
-    /// See [`Sde`](Sde#errors).
-    pub fn unmodeled_files(&self) -> Result<Vec<String>> {
+    /// Every backend works this out when it is opened, so asking costs a
+    /// copy of the list and nothing else.
+    #[must_use]
+    pub fn unmodeled_files(&self) -> Vec<String> {
         match &self.backend {
-            Backend::Memory(memory) => Ok(memory.unmodeled_files()),
+            Backend::Memory(memory) => memory.unmodeled_files().to_vec(),
             #[cfg(feature = "sqlite")]
-            Backend::Sqlite(store) => lock(store).unmodeled_files(),
+            Backend::Sqlite(store) => lock(store).unmodeled_files().to_vec(),
+            #[cfg(feature = "store")]
+            Backend::Store(store) => store.unmodeled_files().to_vec(),
+        }
+    }
+
+    /// The files of the archive this SDE does not hold, because the name
+    /// each would take is a table's already, sorted.
+    ///
+    /// Not empty means CCP has shipped a file that this version of this
+    /// crate cannot store, because reading it back would mean reading it as
+    /// another table. The rest of the archive was imported as usual, and a
+    /// version that has a model for the file, or another name for the table
+    /// it collides with, holds it. Always empty for an SDE held in memory,
+    /// which names no tables and so refuses no file.
+    #[cfg(any(feature = "sqlite", feature = "store"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite", feature = "store"))))]
+    #[must_use]
+    pub fn refused_files(&self) -> Vec<String> {
+        match &self.backend {
+            Backend::Memory(_) => Vec::new(),
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(store) => lock(store).refused_files().to_vec(),
+            #[cfg(feature = "store")]
+            Backend::Store(store) => store.refused_files().to_vec(),
         }
     }
 
     /// The IDs of the records of `named` with this name, in the order the
     /// name lookups document.
     #[cfg_attr(
-        not(feature = "sqlite"),
+        not(any(feature = "sqlite", feature = "store")),
         expect(
             clippy::unnecessary_wraps,
-            reason = "only the SQLite store can fail, and it needs the feature"
+            reason = "only a store on disk can fail, and that needs a feature"
         )
     )]
     fn ids_named(&self, named: Named, name: &str) -> Result<Vec<u32>> {
@@ -168,15 +238,17 @@ impl Sde {
             Backend::Memory(memory) => Ok(memory.ids_named(named, &key)),
             #[cfg(feature = "sqlite")]
             Backend::Sqlite(store) => lock(store).ids_named(named, &key),
+            #[cfg(feature = "store")]
+            Backend::Store(store) => store.ids_named(named, &key),
         }
     }
 
     /// The IDs of the records under `parent`, ascending.
     #[cfg_attr(
-        not(feature = "sqlite"),
+        not(any(feature = "sqlite", feature = "store")),
         expect(
             clippy::unnecessary_wraps,
-            reason = "only the SQLite store can fail, and it needs the feature"
+            reason = "only a store on disk can fail, and that needs a feature"
         )
     )]
     fn children(&self, relation: Relation, parent: u32) -> Result<Vec<u32>> {
@@ -184,6 +256,8 @@ impl Sde {
             Backend::Memory(memory) => Ok(memory.children(relation, parent)),
             #[cfg(feature = "sqlite")]
             Backend::Sqlite(store) => lock(store).children(relation, parent),
+            #[cfg(feature = "store")]
+            Backend::Store(store) => store.children(relation, parent),
         }
     }
 }
@@ -197,7 +271,21 @@ impl From<crate::sqlite::Store> for Sde {
     fn from(store: crate::sqlite::Store) -> Self {
         Self {
             build: store.build().clone(),
-            backend: Backend::Sqlite(Mutex::new(store)),
+            backend: Backend::Sqlite(Box::new(Mutex::new(store))),
+        }
+    }
+}
+
+/// Use a packed store, such as one opened by its path with
+/// [`Store::open_file`](crate::store::Store::open_file), with the lookups of
+/// [`Sde`].
+#[cfg(feature = "store")]
+#[cfg_attr(docsrs, doc(cfg(feature = "store")))]
+impl From<crate::store::Store> for Sde {
+    fn from(store: crate::store::Store) -> Self {
+        Self {
+            build: store.build().clone(),
+            backend: Backend::Store(Box::new(store)),
         }
     }
 }
@@ -209,6 +297,8 @@ impl fmt::Debug for Sde {
             Backend::Memory(_) => "memory",
             #[cfg(feature = "sqlite")]
             Backend::Sqlite(_) => "sqlite",
+            #[cfg(feature = "store")]
+            Backend::Store(_) => "store",
         };
         f.debug_struct("Sde")
             .field("build", &self.build)
@@ -237,6 +327,8 @@ impl Source for Sde {
             Backend::Memory(memory) => Ok(memory.get(key)),
             #[cfg(feature = "sqlite")]
             Backend::Sqlite(store) => lock(store).get::<T>(key),
+            #[cfg(feature = "store")]
+            Backend::Store(store) => store.get::<T>(key),
         }
     }
 }
@@ -246,26 +338,10 @@ pub(crate) fn name_key(name: &str) -> String {
     name.trim().to_lowercase()
 }
 
-/// A table that the name lookups search.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum Named {
-    Type,
-    Group,
-    Category,
-    MarketGroup,
-    System,
-    Constellation,
-    Region,
-    Station,
-    Faction,
-    Corporation,
-    Attribute,
-    Effect,
-}
-
 /// Which records come first among those that share a name. Lower IDs come
 /// next in every case.
-#[cfg(feature = "sqlite")]
+#[cfg(any(feature = "sqlite", feature = "store"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Preferred {
     /// Published records.
     Published,
@@ -275,57 +351,87 @@ pub(crate) enum Preferred {
     None,
 }
 
-#[cfg(feature = "sqlite")]
-impl Named {
-    pub(crate) fn table(self) -> &'static str {
-        match self {
-            Self::Type => <Type as Sealed>::TABLE,
-            Self::Group => <Group as Sealed>::TABLE,
-            Self::Category => <Category as Sealed>::TABLE,
-            Self::MarketGroup => <MarketGroup as Sealed>::TABLE,
-            Self::System => <SolarSystem as Sealed>::TABLE,
-            Self::Constellation => <Constellation as Sealed>::TABLE,
-            Self::Region => <Region as Sealed>::TABLE,
-            Self::Station => <NpcStation as Sealed>::TABLE,
-            Self::Faction => <Faction as Sealed>::TABLE,
-            Self::Corporation => <NpcCorporation as Sealed>::TABLE,
-            Self::Attribute => <Attribute as Sealed>::TABLE,
-            Self::Effect => <Effect as Sealed>::TABLE,
+/// Define `Named` from one list of tables, so that a table cannot join the
+/// name lookups without `Named::ALL` gaining it too. A table left out of
+/// `ALL` gets no name index when a packed store is imported, and every
+/// search of it then fails at read.
+macro_rules! named_tables {
+    ($($variant:ident => $model:ty, $preferred:ident;)*) => {
+        /// A table that the name lookups search.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub(crate) enum Named {
+            $($variant,)*
         }
-    }
 
-    pub(crate) fn preferred(self) -> Preferred {
-        match self {
-            Self::Type | Self::Group | Self::Category => Preferred::Published,
-            Self::Corporation => Preferred::NotDeleted,
-            Self::MarketGroup
-            | Self::System
-            | Self::Constellation
-            | Self::Region
-            | Self::Station
-            | Self::Faction
-            | Self::Attribute
-            | Self::Effect => Preferred::None,
+        #[cfg(any(feature = "sqlite", feature = "store"))]
+        impl Named {
+            /// Every table the name lookups search. Only the packed store
+            /// needs them as a list: the SQLite one asks SQLite for each in
+            /// turn.
+            #[cfg(feature = "store")]
+            pub(crate) const ALL: &'static [Self] = &[$(Self::$variant,)*];
+
+            pub(crate) fn table(self) -> &'static str {
+                match self {
+                    $(Self::$variant => <$model as Sealed>::TABLE,)*
+                }
+            }
+
+            pub(crate) fn preferred(self) -> Preferred {
+                match self {
+                    $(Self::$variant => Preferred::$preferred,)*
+                }
+            }
         }
-    }
+    };
 }
 
-/// Records listed under a parent record.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum Relation {
+named_tables! {
+    Type => Type, Published;
+    Group => Group, Published;
+    Category => Category, Published;
+    MarketGroup => MarketGroup, None;
+    System => SolarSystem, None;
+    Constellation => Constellation, None;
+    Region => Region, None;
+    Station => NpcStation, None;
+    Faction => Faction, None;
+    Corporation => NpcCorporation, NotDeleted;
+    Attribute => Attribute, None;
+    Effect => Effect, None;
+}
+
+/// Define `Relation` from one list, for the reason `named_tables` exists: a
+/// relation missing from `Relation::ALL` would have no children index in a
+/// packed store, and its lookup would fail at read.
+macro_rules! relations {
+    ($($(#[$meta:meta])* $variant:ident => $model:ty, $field:literal;)*) => {
+        /// Records listed under a parent record.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub(crate) enum Relation {
+            $($(#[$meta])* $variant,)*
+        }
+
+        #[cfg(any(feature = "sqlite", feature = "store"))]
+        impl Relation {
+            /// Every relation the lookups follow: the packed store builds
+            /// an index for each, and the SQLite store an SQL index.
+            pub(crate) const ALL: &'static [Self] = &[$(Self::$variant,)*];
+
+            /// The child table, and the field in it that holds the parent's
+            /// ID.
+            pub(crate) fn child(self) -> (&'static str, &'static str) {
+                match self {
+                    $(Self::$variant => (<$model as Sealed>::TABLE, $field),)*
+                }
+            }
+        }
+    };
+}
+
+relations! {
     /// The types of a group.
-    TypesInGroup,
+    TypesInGroup => Type, "groupID";
     /// The groups of a category.
-    GroupsInCategory,
-}
-
-impl Relation {
-    /// The child table, and the JSON path of the parent's ID in it.
-    #[cfg(feature = "sqlite")]
-    pub(crate) fn column(self) -> (&'static str, &'static str) {
-        match self {
-            Self::TypesInGroup => (<Type as Sealed>::TABLE, "$.groupID"),
-            Self::GroupsInCategory => (<Group as Sealed>::TABLE, "$.categoryID"),
-        }
-    }
+    GroupsInCategory => Group, "categoryID";
 }

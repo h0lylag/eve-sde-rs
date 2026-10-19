@@ -12,9 +12,9 @@ mod common;
 use common::file_names;
 use eve_sde::ids::{GroupId, SystemId, TypeId};
 use eve_sde::model::{CharacterTitle, NpcStation, SolarSystem, Star, Type};
-use eve_sde::sqlite::{self, ImportOutcome, LAYOUT_VERSION, Store};
+use eve_sde::sqlite::{self, ImportOutcome, LAYOUT_VERSION, Store, rusqlite};
 use eve_sde::testing::ArchiveBuilder;
-use eve_sde::{Archive, Error};
+use eve_sde::{Archive, Error, Sde};
 use std::fs;
 use std::io::Cursor;
 use std::path::Path;
@@ -273,14 +273,42 @@ fn a_line_without_a_key_is_an_error() {
 
 #[test]
 fn a_file_without_a_model_cannot_take_a_used_name() {
-    // `stargates` is the table of `mapStargates.jsonl`.
-    for file in ["stargates.jsonl", "sdeState.jsonl"] {
-        let builder = ArchiveBuilder::new(1).file(file, r#"{"_key":1}"#);
-        assert!(matches!(
-            Store::in_memory(&mut archive(builder)),
-            Err(Error::Invalid(message)) if message.contains(file)
-        ));
-    }
+    // `stargates` is the table of `mapStargates.jsonl`, and `sde_state` is
+    // one of the store's own two tables. Neither name can be taken, because
+    // `get` for them would read this file's records; and CCP shipping such a
+    // file must not fail the whole import.
+    let store = in_memory(
+        fixture(1)
+            .file("stargates.jsonl", r#"{"_key":1}"#)
+            .file("sdeState.jsonl", r#"{"_key":1}"#)
+            .file("newThings.jsonl", r#"{"_key":1}"#),
+    );
+    assert_eq!(
+        store.refused_files(),
+        vec!["sdeState.jsonl".to_owned(), "stargates.jsonl".to_owned()]
+    );
+    // The table whose name was wanted is untouched.
+    assert_eq!(
+        store.get::<Type>(TypeId(587)).unwrap().unwrap().name,
+        "Rifter"
+    );
+    // The docs call the column a JSON array, so plain SQL reaches it too.
+    let sql: Vec<String> = store
+        .connection()
+        .prepare("SELECT value FROM sde_state, json_each(refused_files) ORDER BY value")
+        .unwrap()
+        .query_map([], |row| row.get(0))
+        .unwrap()
+        .collect::<rusqlite::Result<_>>()
+        .unwrap();
+    assert_eq!(sql, store.refused_files());
+    // A file whose name is free is still a table of its own, and a store
+    // with nothing refused says so.
+    assert_eq!(
+        Sde::from(store).unmodeled_files(),
+        vec!["newThings.jsonl".to_owned()]
+    );
+    assert_eq!(in_memory(fixture(1)).refused_files(), Vec::<String>::new());
 }
 
 #[test]
@@ -354,4 +382,51 @@ fn import_creates_the_folder() {
 fn a_store_can_move_to_another_thread() {
     fn send<T: Send>() {}
     send::<Store>();
+}
+
+/// `copy_table` types the `key` column from the data, so a table whose
+/// `_key` CCP changed must fail the lookup rather than find no row.
+#[test]
+fn keys_of_the_other_shape_fail_rather_than_answer_none() {
+    // `types` keyed by text, as if CCP had changed `_key`.
+    let text_keyed =
+        r#"{"_key":"587","groupID":25,"name":{"en":"Rifter"},"portionSize":1,"published":true}"#;
+    let store = in_memory(fixture(1).rows::<Type>(text_keyed));
+    assert!(matches!(
+        store.get::<Type>(TypeId(587)),
+        Err(Error::Invalid(message))
+            if message.contains("table `types`")
+                && message.contains("has text keys")
+                && message.contains("expects integer")
+    ));
+
+    // `character_titles` keyed by numbers, the direction that used to answer
+    // `None`: the parameter is text and the column is an integer.
+    let number_keyed = r#"{"_key":12,"name":{"en":"Captain"}}"#;
+    let store = in_memory(fixture(1).rows::<CharacterTitle>(number_keyed));
+    assert!(matches!(
+        store.get::<CharacterTitle>("a1b2".to_owned()),
+        Err(Error::Invalid(message))
+            if message.contains("table `character_titles`")
+                && message.contains("has integer keys")
+                && message.contains("expects text")
+    ));
+
+    // Tables whose keys are as their models say still answer.
+    let store = in_memory(fixture(1));
+    assert!(store.get::<Type>(TypeId(587)).unwrap().is_some());
+    assert!(store.get::<Type>(TypeId(1)).unwrap().is_none());
+    assert!(
+        store
+            .get::<CharacterTitle>("a1b2".to_owned())
+            .unwrap()
+            .is_some()
+    );
+    // An empty table is typed from its model, so it answers `None`.
+    assert!(
+        store
+            .get::<Star>(eve_sde::ids::CelestialId(40_000_001))
+            .unwrap()
+            .is_none()
+    );
 }

@@ -759,8 +759,11 @@ fn merge_shape(a: &Shape, b: &Shape) -> anyhow::Result<Shape> {
 
 /// `typeID` → `type_id`, `allowCCPDevs` → `allow_ccp_devs`.
 ///
-/// eve-sde's SQLite store names the tables of files without a model by the
-/// same rule (`table_name` in `src/sqlite.rs`). Keep the two the same.
+/// Both stores name the tables of files without a model by the same rule
+/// (`table_name` in `src/tables.rs`). Keep the two the same, so that a file
+/// keeps its name in a store once it has a model. `xtask` does not depend on
+/// `eve-sde`, because `eve-sde` could then not be fixed by regenerating its
+/// models, so the rule is written twice and both copies carry these tests.
 fn snake_case(name: &str) -> String {
     let name = name.replace("IDs", "Ids").replace("ID", "Id");
     let chars: Vec<char> = name.chars().collect();

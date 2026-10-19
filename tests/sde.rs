@@ -189,23 +189,75 @@ fn archive(builder: ArchiveBuilder) -> Archive<Cursor<Vec<u8>>> {
 }
 
 /// The fixture in every backend, with the backend's name.
-fn backends(builder: &ArchiveBuilder) -> Vec<(&'static str, Sde)> {
+/// Every backend over one SDE, with the folder a packed store lives in kept
+/// alive beside it.
+fn backends(builder: &ArchiveBuilder) -> Vec<(&'static str, Sde, Option<tempfile::TempDir>)> {
     vec![
         (
             "memory",
             Sde::from_archive(&mut archive(builder.clone())).unwrap(),
+            None,
         ),
         #[cfg(feature = "sqlite")]
         (
             "sqlite",
             Sde::from(eve_sde::sqlite::Store::in_memory(&mut archive(builder.clone())).unwrap()),
+            None,
         ),
+        #[cfg(feature = "store")]
+        {
+            let dir = tempfile::tempdir().unwrap();
+            eve_sde::store::import(&mut archive(builder.clone()), dir.path()).unwrap();
+            ("store", Sde::open_store(dir.path()).unwrap(), Some(dir))
+        },
     ]
+}
+
+/// Both kinds of store leave a file out when the name it would take is a
+/// table's already, and both say which. In memory there are no table names
+/// to take. The two imports diverged here once, and this is what would catch
+/// it again.
+#[cfg(all(feature = "sqlite", feature = "store"))]
+#[test]
+fn both_stores_refuse_a_file_whose_name_is_taken() {
+    let builder = fixture().file("Types.jsonl", r#"{"_key":1,"a":2}"#);
+    let dir = tempfile::tempdir().unwrap();
+    eve_sde::store::import(&mut archive(builder.clone()), dir.path()).unwrap();
+
+    let packed = Sde::open_store(dir.path()).unwrap();
+    let sqlite =
+        Sde::from(eve_sde::sqlite::Store::in_memory(&mut archive(builder.clone())).unwrap());
+    let memory = Sde::from_archive(&mut archive(builder)).unwrap();
+
+    assert_eq!(packed.refused_files(), vec!["Types.jsonl".to_owned()]);
+    assert_eq!(sqlite.refused_files(), packed.refused_files());
+    assert_eq!(memory.refused_files(), Vec::<String>::new());
+
+    // And every backend still answers for the table whose name was wanted.
+    for (backend, sde) in [("memory", memory), ("sqlite", sqlite), ("store", packed)] {
+        assert_eq!(
+            sde.type_id("rifter").unwrap(),
+            Some(TypeId(587)),
+            "{backend}"
+        );
+    }
+}
+
+/// A backend that fails to build would otherwise be silently untested.
+#[test]
+fn every_backend_is_in_the_comparison() {
+    let backends = backends(&fixture());
+    let names: Vec<&str> = backends.iter().map(|(name, _, _)| *name).collect();
+    assert!(names.contains(&"memory"), "{names:?}");
+    #[cfg(feature = "sqlite")]
+    assert!(names.contains(&"sqlite"), "{names:?}");
+    #[cfg(feature = "store")]
+    assert!(names.contains(&"store"), "{names:?}");
 }
 
 #[test]
 fn names_are_found_ignoring_case_and_surrounding_space() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         assert_eq!(
             sde.type_id("  tritanium ").unwrap(),
             Some(TypeId(34)),
@@ -269,7 +321,7 @@ fn names_are_found_ignoring_case_and_surrounding_space() {
 
 #[test]
 fn preferred_records_come_first_among_equal_names() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         // Published types first, although the unpublished one has a lower ID.
         assert_eq!(
             sde.type_ids("rifter").unwrap(),
@@ -292,7 +344,7 @@ fn preferred_records_come_first_among_equal_names() {
 
 #[test]
 fn types_join_their_group_category_meta_group_and_market_path() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         let rifter = TypeId(587);
         assert_eq!(
             sde.type_name(rifter).unwrap().unwrap(),
@@ -333,7 +385,7 @@ fn types_join_their_group_category_meta_group_and_market_path() {
 
 #[test]
 fn groups_list_their_types_and_categories_their_groups() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         assert_eq!(
             sde.types_in_group(GroupId(25)).unwrap(),
             [TypeId(100), TypeId(587)],
@@ -350,7 +402,7 @@ fn groups_list_their_types_and_categories_their_groups() {
 
 #[test]
 fn dogma_attributes_fall_back_to_their_default() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         let rifter = TypeId(587);
         assert_eq!(
             sde.attribute(rifter, AttributeId(14)).unwrap(),
@@ -394,7 +446,7 @@ fn dogma_attributes_fall_back_to_their_default() {
 
 #[test]
 fn modules_have_effects_slots_and_hardpoints() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         let autocannon = TypeId(2873);
         let effects: Vec<(String, bool)> = sde
             .effects(autocannon)
@@ -428,7 +480,7 @@ fn modules_have_effects_slots_and_hardpoints() {
 
 #[test]
 fn systems_list_their_gates_and_neighbours() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         let jita = SystemId(30_000_142);
         assert_eq!(
             sde.neighbors(jita).unwrap(),
@@ -452,7 +504,7 @@ fn systems_list_their_gates_and_neighbours() {
 
 #[test]
 fn everything_with_an_id_has_its_in_game_name() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         let name = |id: u32| sde.name(id).unwrap();
         assert_eq!(name(10_000_002).as_deref(), Some("The Forge"), "{backend}");
         assert_eq!(name(20_000_020).as_deref(), Some("Kimotoro"), "{backend}");
@@ -515,7 +567,7 @@ fn everything_with_an_id_has_its_in_game_name() {
 
 #[test]
 fn records_are_read_by_key() {
-    for (backend, sde) in backends(&fixture()) {
+    for (backend, sde, _dir) in backends(&fixture()) {
         assert_eq!(sde.build().build_number, 7, "{backend}");
         let rifter = sde.get::<Type>(TypeId(587)).unwrap().unwrap();
         assert_eq!(rifter.name, "Rifter", "{backend}");
@@ -526,12 +578,8 @@ fn records_are_read_by_key() {
 #[test]
 fn tables_without_a_model_are_listed() {
     let builder = fixture().file("newThings.jsonl", r#"{"_key":1}"#);
-    for (backend, sde) in backends(&builder) {
-        assert_eq!(
-            sde.unmodeled_files().unwrap(),
-            ["newThings.jsonl"],
-            "{backend}"
-        );
+    for (backend, sde, _dir) in backends(&builder) {
+        assert_eq!(sde.unmodeled_files(), ["newThings.jsonl"], "{backend}");
     }
 }
 
@@ -539,6 +587,30 @@ fn tables_without_a_model_are_listed() {
 fn threads_can_share_an_sde() {
     fn shared<T: Send + Sync>() {}
     shared::<Sde>();
+
+    // And really share one: a packed store takes no lock, so threads read
+    // it at the same time rather than taking turns.
+    for (backend, sde, _dir) in backends(&fixture()) {
+        let sde = std::sync::Arc::new(sde);
+        let readers: Vec<_> = (0..8)
+            .map(|_| {
+                let sde = std::sync::Arc::clone(&sde);
+                std::thread::spawn(move || {
+                    for _ in 0..25 {
+                        assert_eq!(sde.type_id("rifter").unwrap(), Some(TypeId(587)));
+                        assert_eq!(sde.types_in_group(GroupId(25)).unwrap().len(), 2);
+                        assert_eq!(
+                            sde.station_name(StationId(60_003_760)).unwrap().as_deref(),
+                            Some("Jita IV - Moon 4 - Caldari Navy Assembly Plant")
+                        );
+                    }
+                })
+            })
+            .collect();
+        for reader in readers {
+            reader.join().unwrap_or_else(|_| panic!("{backend}"));
+        }
+    }
 }
 
 #[cfg(feature = "sqlite")]

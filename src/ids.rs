@@ -35,6 +35,11 @@ macro_rules! ids {
             fn sql_key(&self) -> rusqlite::types::ToSqlOutput<'_> {
                 crate::tables::sealed::SealedKey::sql_key(&self.0)
             }
+
+            #[cfg(feature = "store")]
+            fn store_key(&self) -> crate::tables::StoreKey<'_> {
+                crate::tables::sealed::SealedKey::store_key(&self.0)
+            }
         }
 
         impl From<u32> for $name {

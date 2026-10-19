@@ -198,8 +198,8 @@ impl Memory {
             .unwrap_or_default()
     }
 
-    pub(super) fn unmodeled_files(&self) -> Vec<String> {
-        self.unmodeled.clone()
+    pub(super) fn unmodeled_files(&self) -> &[String] {
+        &self.unmodeled
     }
 }
 

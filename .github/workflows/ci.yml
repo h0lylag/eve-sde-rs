@@ -15,6 +15,9 @@ jobs:
           - "--no-default-features --features download"
           - "--no-default-features --features sqlite"
           - "--no-default-features --features sqlite,download"
+          - "--no-default-features --features store"
+          - "--no-default-features --features store,download"
+          - "--no-default-features --features store,sqlite"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

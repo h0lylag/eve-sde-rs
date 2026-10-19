@@ -22,10 +22,11 @@
 //! # Layout
 //!
 //! Every file of the archive is a table, including files this crate has no
-//! model for. A table with a model has the name that [`tables`](crate::tables)
-//! gives it, such as `types` or `solar_systems`. Any other table is named
-//! after its file in snake case, so `newThings.jsonl` becomes `new_things`.
-//! Each table has four columns:
+//! model for, unless the name it would take is taken already (see
+//! [Format changes](#format-changes)). A table with a model has the name that
+//! [`tables`](crate::tables) gives it, such as `types` or `solar_systems`.
+//! Any other table is named after its file in snake case, so
+//! `newThings.jsonl` becomes `new_things`. Each table has four columns:
 //!
 //! - `key`: CCP's `_key`, the primary key. It is an integer, or text in the
 //!   few files keyed by UUIDs.
@@ -50,9 +51,10 @@
 //!
 //! - `sde_state`: one row with the `build`, its `release_date`, the
 //!   `layout` ([`LAYOUT_VERSION`]), the `eve_sde` version that wrote it,
-//!   `imported_at` in seconds since 1970, and `station_names_error`, which is
-//!   `NULL` unless the NPC stations have no names (see
-//!   [Format changes](#format-changes)).
+//!   `imported_at` in seconds since 1970, `station_names_error`, which is
+//!   `NULL` unless the NPC stations have no names, and `refused_files`,
+//!   which is `NULL` unless the import left a file out. Both are described
+//!   under [Format changes](#format-changes).
 //! - `sde_tables`: one row per table with its `name`, its `file` in the
 //!   archive, whether this crate has a model for it (`modeled`), and its
 //!   number of `rows`.
@@ -73,6 +75,14 @@
 //! format before this crate's models catch up, [`Store::get`] fails for the
 //! changed table only, and the import still succeeds.
 //!
+//! A file this crate has no model for becomes a table named after it. If
+//! that name belongs to a modeled table, to `sde_state` or `sde_tables`, or
+//! to another file already, the file is left out of the store and
+//! [`Store::refused_files`] names it, because a table is found by name and
+//! reading the file back would mean reading it as that other table. The rest
+//! of the archive imports as usual, and the names are in
+//! `sde_state.refused_files` as a JSON array.
+//!
 //! Station names are the one thing the import reads through the models: they
 //! come from the stations, celestials, corporations and station operations.
 //! If one of those records does not fit its model, the stations get no names
@@ -88,19 +98,19 @@
 //! millisecond.
 
 use crate::archive::{Archive, BuildInfo};
-use crate::error::{Error, PathContext, Result, io_context};
+use crate::error::{Error, PathContext, Result, error_chain, io_context};
 use crate::ids::StationId;
 use crate::model::NpcStation;
 use crate::parts;
 use crate::sde::{Named, Preferred, Relation, Source, name_key, naming};
 use crate::tables::sealed::{Sealed, SealedKey};
-use crate::tables::{KeyKind, Record, tables};
+use crate::tables::{Key, KeyKind, Record, table_name, tables};
 use rusqlite::types::{ToSqlOutput, ValueRef};
 use rusqlite::{Connection, ErrorCode, OpenFlags, OptionalExtension, ToSql, Transaction, params};
 use serde_json::{Map, Value};
 use std::borrow::Borrow;
-use std::collections::HashSet;
-use std::error::Error as StdError;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fs::{self, DirEntry, OpenOptions};
 use std::io::{self, Read, Seek};
@@ -117,12 +127,13 @@ pub use rusqlite;
 /// It changes when a table or column changes, and is part of each store's
 /// file name, so a new version of this crate does not open a store an older
 /// one wrote. Import again instead.
-pub const LAYOUT_VERSION: u32 = 1;
+pub const LAYOUT_VERSION: u32 = 2;
 
-/// The file in which [`update`] keeps the ZIP.
+/// The file in which [`update`] keeps the ZIP, as
+/// [`eve_sde::ZIP_FILE`](crate::ZIP_FILE).
 #[cfg(feature = "download")]
 #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
-pub const ZIP_FILE: &str = "sde.zip";
+pub use crate::update::ZIP_FILE;
 
 /// The languages CCP writes text in, as in `LANGUAGES` in
 /// `xtask/src/schema.rs`. An object that has `en` and otherwise only these
@@ -133,17 +144,9 @@ const LANGUAGES: [&str; 9] = ["de", "en", "es", "fr", "it", "ja", "ko", "ru", "z
 const STATE_TABLE: &str = "sde_state";
 const TABLES_TABLE: &str = "sde_tables";
 
-/// What [`import`] or [`update`] did.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum ImportOutcome {
-    /// The build was imported.
-    Imported,
-    /// The folder already holds this build.
-    UpToDate,
-    /// The folder holds a newer build, so this one was not imported.
-    OlderRefused,
-}
+/// What an import or an update did, as
+/// [`eve_sde::ImportOutcome`](crate::ImportOutcome).
+pub use crate::update::ImportOutcome;
 
 /// Import `archive` into a new store file in `dir`, creating `dir` if it is
 /// missing.
@@ -160,9 +163,9 @@ pub enum ImportOutcome {
 ///
 /// Fails if `dir` cannot be created or read, a file of the archive cannot be
 /// read, a line is not JSON or has no `_key`, two records of a file share a
-/// key, a file this crate has no model for would take the name of another
-/// table, or SQLite fails. On failure the temporary file is deleted and `dir`
-/// stays as it was.
+/// key, or SQLite fails. On failure the temporary file is deleted and `dir`
+/// stays as it was. A file this crate has no model for whose name is taken
+/// already is left out instead, as [`Store::refused_files`] describes.
 pub fn import<R: Read + Seek>(
     archive: &mut Archive<R>,
     dir: impl AsRef<Path>,
@@ -170,30 +173,10 @@ pub fn import<R: Read + Seek>(
     import_into(archive, dir.as_ref())
 }
 
-/// A step of [`update_with_progress`], reported when it starts and as the
-/// download goes on.
+/// A step of [`update_with_progress`], as [`eve_sde::Step`](crate::Step).
 #[cfg(feature = "download")]
 #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
-pub enum Step {
-    /// Asking CCP for the latest build.
-    Checking,
-    /// Downloading a build into [`ZIP_FILE`].
-    Downloading {
-        /// The build being downloaded.
-        build: u32,
-        /// The bytes received so far.
-        received: u64,
-        /// The size of the download, if the server sent it.
-        total: Option<u64>,
-    },
-    /// Importing a build into a new store. It cannot be cancelled.
-    Importing {
-        /// The build being imported.
-        build: u32,
-    },
-}
+pub use crate::update::Step;
 
 /// Bring the store in `dir` up to the latest build: download it, then
 /// [`import`] it.
@@ -251,44 +234,22 @@ pub fn update_with_progress(
     dir: impl AsRef<Path>,
     mut progress: impl FnMut(Step) -> ControlFlow<()>,
 ) -> Result<ImportOutcome> {
-    update_dir(client, dir.as_ref(), &mut progress)
+    crate::update::update_dir(client, dir.as_ref(), &mut progress, &Sqlite)
 }
 
+/// The SQLite store, as [`update`] drives it.
 #[cfg(feature = "download")]
-fn update_dir(
-    client: &crate::download::Client,
-    dir: &Path,
-    progress: &mut dyn FnMut(Step) -> ControlFlow<()>,
-) -> Result<ImportOutcome> {
-    fs::create_dir_all(dir).path_context("create", dir)?;
-    if progress(Step::Checking).is_break() {
-        return Err(Error::Cancelled);
+struct Sqlite;
+
+#[cfg(feature = "download")]
+impl crate::update::Local for Sqlite {
+    fn already_holds(&self, dir: &Path, build: u32) -> Result<Option<ImportOutcome>> {
+        already_holds(dir, build)
     }
-    let build = client.latest_build()?;
-    if let Some(outcome) = already_holds(dir, build)? {
-        return Ok(outcome);
+
+    fn import(&self, archive: &mut Archive, dir: &Path) -> Result<ImportOutcome> {
+        import_into(archive, dir)
     }
-    let zip = dir.join(ZIP_FILE);
-    let mut downloading = |received: u64, total: Option<u64>| {
-        progress(Step::Downloading {
-            build,
-            received,
-            total,
-        })
-    };
-    if crate::download::local_build(&zip).is_ok() {
-        client.update_path(&zip, Some(build), &mut downloading)?;
-    } else {
-        // The ZIP is this module's own file, so one that cannot be read is
-        // replaced rather than kept.
-        client.download(build, &zip, &mut downloading)?;
-    }
-    let mut archive = Archive::open(&zip)?;
-    let build = archive.build().build_number;
-    if progress(Step::Importing { build }).is_break() {
-        return Err(Error::Cancelled);
-    }
-    import_into(&mut archive, dir)
 }
 
 /// What an import of `build` into `dir` returns without importing: `Some` if
@@ -355,6 +316,12 @@ pub struct Store {
     build: BuildInfo,
     /// Why the import gave the NPC stations no names, if it did not.
     station_names_error: Option<String>,
+    /// The kind of key each table is stored with, read on first use.
+    key_kinds: RefCell<HashMap<&'static str, KeyKind>>,
+    /// The files the import left out, because their names were taken.
+    refused_files: Vec<String>,
+    /// The files in the store this crate has no model for, sorted.
+    unmodeled_files: Vec<String>,
 }
 
 impl Store {
@@ -407,6 +374,34 @@ impl Store {
                 "the store has layout {layout}, not {LAYOUT_VERSION}"
             )));
         }
+        // A second query, after the layout check, so that a store of another
+        // layout reports its layout rather than failing on a column that
+        // layout does not have.
+        let refused: Option<String> = connection
+            .query_row(
+                &format!("SELECT refused_files FROM {STATE_TABLE}"),
+                [],
+                |row| row.get(0),
+            )
+            .map_err(Error::sqlite)?;
+        let refused_files = match refused {
+            Some(json) => serde_json::from_str(&json).map_err(|e| {
+                Error::Invalid(format!(
+                    "the store's refused file names are not readable: {e}"
+                ))
+            })?,
+            None => Vec::new(),
+        };
+        let unmodeled_files = connection
+            .prepare(&format!(
+                "SELECT file FROM {TABLES_TABLE} WHERE NOT modeled ORDER BY file"
+            ))
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get(0))?
+                    .collect::<rusqlite::Result<Vec<String>>>()
+            })
+            .map_err(Error::sqlite)?;
         let build = BuildInfo {
             build_number,
             release_date,
@@ -415,6 +410,9 @@ impl Store {
             connection,
             build,
             station_names_error,
+            key_kinds: RefCell::new(HashMap::new()),
+            refused_files,
+            unmodeled_files,
         })
     }
 
@@ -441,7 +439,58 @@ impl Store {
     /// happens when CCP changes the format before this crate catches up, and
     /// with [`Error::Sqlite`] if the query fails.
     pub fn get<T: Record>(&self, key: impl Borrow<T::Key>) -> Result<Option<T>> {
+        self.check_key_kind::<T>()?;
         get_record(&self.connection, key.borrow())
+    }
+
+    /// Fail if `T`'s table is keyed by text where `T` expects numbers, or
+    /// the other way round.
+    ///
+    /// [`copy_table`] types the `key` column from the first record and not
+    /// from the model, so a table whose `_key` CCP has changed is stored as
+    /// the data has it. Binding the model's kind against that column finds
+    /// no row, which is the one thing a lookup must not report as "no such
+    /// record". The column type is read once per table per store.
+    fn check_key_kind<T: Record>(&self) -> Result<()> {
+        let table = <T as Sealed>::TABLE;
+        let wanted = <T::Key as Key>::KIND;
+        if let Some(stored) = self.key_kinds.borrow().get(table) {
+            return mismatch(table, *stored, wanted);
+        }
+        // The declared type of the `key` column, which `create_table` wrote.
+        let declared: Option<String> = self
+            .connection
+            .prepare_cached("SELECT type FROM pragma_table_info(?1) WHERE name = 'key'")
+            .and_then(|mut statement| statement.query_row([table], |row| row.get(0)).optional())
+            .map_err(Error::sqlite)?;
+        let Some(declared) = declared else {
+            return Err(Error::Invalid(format!(
+                "the store has no table `{table}`: it was written by a version of \
+                 eve_sde that had no model for it. Import again with this version."
+            )));
+        };
+        let stored = if declared.eq_ignore_ascii_case("text") {
+            KeyKind::Text
+        } else {
+            KeyKind::Integer
+        };
+        self.key_kinds.borrow_mut().insert(table, stored);
+        mismatch(table, stored, wanted)
+    }
+
+    /// The files of the archive this store does not hold, because the name
+    /// each would take is a table's already, sorted.
+    ///
+    /// Not empty means CCP has shipped a file that this version of this
+    /// crate cannot store, because reading it back would mean reading it as
+    /// another table, as one of the store's own two tables, or as another
+    /// file. The rest of the archive was imported as usual, and a version
+    /// that has a model for the file, or another name for the table it
+    /// collides with, stores it. The names are in `sde_state.refused_files`
+    /// as a JSON array, for a query of your own.
+    #[must_use]
+    pub fn refused_files(&self) -> &[String] {
+        &self.refused_files
     }
 
     /// The SQLite connection, for queries of your own. It is read-only in a
@@ -473,9 +522,9 @@ impl Store {
 
     /// The IDs of the records under `parent`, ascending.
     pub(crate) fn children(&self, relation: Relation, parent: u32) -> Result<Vec<u32>> {
-        let (table, path) = relation.column();
+        let (table, field) = relation.child();
         let sql = format!(
-            r#"SELECT key FROM "{table}" WHERE json_extract(data, '{path}') = ?1 ORDER BY key"#
+            r#"SELECT key FROM "{table}" WHERE json_extract(data, '$.{field}') = ?1 ORDER BY key"#
         );
         self.ids(&sql, parent)
     }
@@ -490,17 +539,32 @@ impl Store {
     }
 
     /// The files of the tables that have no model, sorted.
-    pub(crate) fn unmodeled_files(&self) -> Result<Vec<String>> {
-        let sql = format!("SELECT file FROM {TABLES_TABLE} WHERE NOT modeled ORDER BY file");
-        let mut statement = self
-            .connection
-            .prepare_cached(&sql)
-            .map_err(Error::sqlite)?;
-        let rows = statement
-            .query_map([], |row| row.get(0))
-            .map_err(Error::sqlite)?;
-        rows.collect::<rusqlite::Result<_>>().map_err(Error::sqlite)
+    /// Sorted names of the files in the store that this crate has no model
+    /// for. Not empty means CCP added a table this version does not know.
+    ///
+    /// Each is a table of its own, named after it, and `sde_tables` describes
+    /// it, so plain SQL reads it as well.
+    #[must_use]
+    pub fn unmodeled_files(&self) -> &[String] {
+        &self.unmodeled_files
     }
+}
+
+/// Fail if a table's keys are not of the kind the model expects.
+fn mismatch(table: &str, stored: KeyKind, wanted: KeyKind) -> Result<()> {
+    if stored == wanted {
+        return Ok(());
+    }
+    let name = |kind| match kind {
+        KeyKind::Integer => "integer",
+        KeyKind::Text => "text",
+    };
+    Err(Error::Invalid(format!(
+        "table `{table}` has {} keys, but this version of eve_sde expects {} ones: \
+         read it with plain SQL, or update eve_sde",
+        name(stored),
+        name(wanted),
+    )))
 }
 
 /// The record of `T` with this key, from any connection to a store.
@@ -570,16 +634,21 @@ fn write<R: Read + Seek>(connection: &mut Connection, archive: &mut Archive<R>) 
         });
     }
     let mut names: HashSet<String> = written.iter().map(|table| table.name.clone()).collect();
+    let mut refused_files = Vec::new();
     for file in archive.unmodeled_files().to_vec() {
         let Some(stem) = file.strip_suffix(".jsonl") else {
             continue;
         };
         let name = table_name(stem);
         let reserved = name == STATE_TABLE || name == TABLES_TABLE || name.starts_with("sqlite_");
+        // A store holds its tables by name, so a file cannot take the name of
+        // a table this crate models, of the store's own two tables, or of
+        // another file: `get` for that model would read this file's records.
+        // CCP shipping such a file must not fail the whole import, so the
+        // file is left out and `sde_state` says which.
         if reserved || !names.insert(name.clone()) {
-            return Err(Error::Invalid(format!(
-                "`{file}` would become table `{name}`, which is taken"
-            )));
+            refused_files.push(file);
+            continue;
         }
         let rows = copy_table(&transaction, archive, &name, &file, KeyKind::Integer)?;
         written.push(Written {
@@ -589,6 +658,7 @@ fn write<R: Read + Seek>(connection: &mut Connection, archive: &mut Archive<R>) 
             rows,
         });
     }
+    refused_files.sort();
     let station_names_error = name_stations(&transaction)?;
     index_relations(&transaction)?;
     write_state(
@@ -596,6 +666,7 @@ fn write<R: Read + Seek>(connection: &mut Connection, archive: &mut Archive<R>) 
         archive.build(),
         &written,
         station_names_error.as_deref(),
+        &refused_files,
     )?;
     transaction.commit().map_err(Error::sqlite)
 }
@@ -663,26 +734,14 @@ fn station_names(transaction: &Transaction<'_>) -> Result<Vec<(StationId, String
         .collect()
 }
 
-/// An error and its causes, joined with `: `.
-fn error_chain(error: &Error) -> String {
-    let mut text = error.to_string();
-    let mut source = StdError::source(error);
-    while let Some(cause) = source {
-        text.push_str(": ");
-        text.push_str(&cause.to_string());
-        source = cause.source();
-    }
-    text
-}
-
 /// Index the parent IDs that [`Relation`] looks records up by.
 fn index_relations(transaction: &Transaction<'_>) -> Result<()> {
-    for relation in [Relation::TypesInGroup, Relation::GroupsInCategory] {
-        let (table, path) = relation.column();
-        let index = format!("{table}_by_{}", &path[2..]);
+    for relation in Relation::ALL {
+        let (table, field) = relation.child();
+        let index = format!("{table}_by_{field}");
         transaction
             .execute_batch(&format!(
-                r#"CREATE INDEX "{index}" ON "{table}" (json_extract(data, '{path}'))"#
+                r#"CREATE INDEX "{index}" ON "{table}" (json_extract(data, '$.{field}'))"#
             ))
             .map_err(Error::sqlite)?;
     }
@@ -774,12 +833,23 @@ fn write_state(
     build: &BuildInfo,
     tables: &[Written],
     station_names_error: Option<&str>,
+    refused_files: &[String],
 ) -> Result<()> {
+    // A JSON array, as every other record in the store is JSON, so
+    // `json_each` reaches it. `NULL` rather than `[]` for the usual case.
+    let refused = if refused_files.is_empty() {
+        None
+    } else {
+        Some(
+            serde_json::to_string(refused_files)
+                .map_err(|e| Error::Invalid(format!("cannot write the refused file names: {e}")))?,
+        )
+    };
     transaction
         .execute_batch(&format!(
             "CREATE TABLE {STATE_TABLE} (build INTEGER NOT NULL, release_date TEXT, \
              layout INTEGER NOT NULL, eve_sde TEXT NOT NULL, imported_at INTEGER NOT NULL, \
-             station_names_error TEXT);
+             station_names_error TEXT, refused_files TEXT);
              CREATE TABLE {TABLES_TABLE} (name TEXT PRIMARY KEY NOT NULL, file TEXT NOT NULL, \
              modeled INTEGER NOT NULL, rows INTEGER NOT NULL);"
         ))
@@ -788,7 +858,7 @@ fn write_state(
         .execute(
             &format!(
                 "INSERT INTO {STATE_TABLE} \
-                 VALUES (?1, ?2, ?3, ?4, CAST(strftime('%s', 'now') AS INTEGER), ?5)"
+                 VALUES (?1, ?2, ?3, ?4, CAST(strftime('%s', 'now') AS INTEGER), ?5, ?6)"
             ),
             params![
                 build.build_number,
@@ -796,6 +866,7 @@ fn write_state(
                 LAYOUT_VERSION,
                 env!("CARGO_PKG_VERSION"),
                 station_names_error,
+                refused,
             ],
         )
         .map_err(Error::sqlite)?;
@@ -905,36 +976,6 @@ fn english_name(record: &Value) -> Option<String> {
     }
 }
 
-/// The table name for a file this crate has no model for: its name without
-/// `.jsonl`, in snake case by the rule that names the modeled tables
-/// (`snake_case` in `xtask/src/generate.rs`), with any other character
-/// replaced by `_`. Keep the two rules the same, so a table keeps its name
-/// when its file gets a model.
-fn table_name(stem: &str) -> String {
-    let stem = stem.replace("IDs", "Ids").replace("ID", "Id");
-    let chars: Vec<char> = stem.chars().collect();
-    let mut name = String::new();
-    for (i, &c) in chars.iter().enumerate() {
-        if !c.is_ascii_uppercase() {
-            name.push(if c.is_ascii_alphanumeric() { c } else { '_' });
-            continue;
-        }
-        let prev = i.checked_sub(1).and_then(|j| chars.get(j));
-        let next = chars.get(i + 1);
-        let after_lowercase = prev.is_some_and(char::is_ascii_lowercase);
-        let ends_acronym = prev.is_some_and(char::is_ascii_uppercase)
-            && next.is_some_and(char::is_ascii_lowercase);
-        if after_lowercase || ends_acronym {
-            name.push('_');
-        }
-        name.push(c.to_ascii_lowercase());
-    }
-    if name.is_empty() || name.starts_with(|c: char| c.is_ascii_digit()) {
-        name.insert(0, '_');
-    }
-    name
-}
-
 /// The file name of a store of `build` with this [`LAYOUT_VERSION`].
 fn file_name(build: u32) -> String {
     format!("sde-{build}-v{LAYOUT_VERSION}.sqlite")
@@ -1038,15 +1079,6 @@ mod tests {
         );
         assert_eq!(english_name(&json!({"name": 1})), None);
         assert_eq!(english_name(&json!({"_key": 1})), None);
-    }
-
-    #[test]
-    fn unmodeled_files_are_named_in_snake_case() {
-        assert_eq!(table_name("mapSolarSystems"), "map_solar_systems");
-        assert_eq!(table_name("includedTypeIDs"), "included_type_ids");
-        assert_eq!(table_name("allowCCPDevs"), "allow_ccp_devs");
-        assert_eq!(table_name("odd-name.v2"), "odd_name_v2");
-        assert_eq!(table_name("3dThings"), "_3d_things");
     }
 
     #[test]

@@ -5,7 +5,7 @@ at a time, and keep your local copy fresh.
 
 ```toml
 [dependencies]
-eve-sde = "0.2"
+eve-sde = "0.3"
 ```
 
 Needs Rust 1.89 or newer.
@@ -36,9 +36,9 @@ belts, stargates and stations, which the SDE leaves out. `sde.get::<T>(key)`
 reads any record by its key.
 
 `Sde::load` keeps the whole SDE in memory: about 2 s to load and 350 MiB.
-To start in under a millisecond with a few MiB instead, keep it in SQLite
-([below](#keep-it-in-sqlite)) and open it with `Sde::open_sqlite`. Either
-way you get the same methods and the same answers.
+To start in under a millisecond with a few MiB instead, keep a local copy
+([below](#keep-a-local-copy)) and open it with `Sde::open_store`. Either way
+you get the same methods and the same answers.
 
 ## Read tables
 
@@ -91,7 +91,7 @@ turn on the `download` feature and let the crate handle it for you:
 
 ```toml
 [dependencies]
-eve-sde = { version = "0.2", features = ["download"] }
+eve-sde = { version = "0.3", features = ["download"] }
 ```
 
 ```rust
@@ -108,15 +108,49 @@ processes race to write the same file at the same time.
 cargo run --release --features download --example update -- sde.zip
 ```
 
-## Keep it in SQLite
+## Keep a local copy
 
-The `sqlite` feature keeps the whole SDE in a local SQLite file, so an app
-can look things up without loading the ZIP. Use `sqlite-bundled` to compile
-SQLite in, which Windows needs.
+An app that starts often should not read the ZIP every time. The `store`
+feature keeps the whole SDE in one local file with an index of its own, so
+looking things up needs no ZIP and no loading:
 
 ```toml
 [dependencies]
-eve-sde = { version = "0.2", features = ["download", "sqlite-bundled"] }
+eve-sde = { version = "0.3", features = ["download", "store"] }
+```
+
+```rust
+use eve_sde::Sde;
+use eve_sde::download::Client;
+use eve_sde::store;
+
+store::update(&Client::new("my-app/1.0"), "sde")?; // download and import into the `sde` folder
+let sde = Sde::open_store("sde")?;                 // the same lookups as above
+let jita = sde.system_id("Jita")?;
+```
+
+`store::update_with_progress` does the same and reports each step, such as
+for a progress bar, and can be cancelled until the import begins.
+
+Importing a whole SDE takes about 2.5 s and makes a file of about 525 MB.
+Each build gets its own file, so an update never touches a store that another
+process has open, and several threads or processes can read one store at
+once. Opening takes well under a millisecond and a few KiB; a table's index
+is read the first time something asks for that table.
+
+The store is written once and never again, and every record's checksum is in
+its index, so `store::Store::verify()` can say whether a store is still
+sound. `Store::lines("types")` reads a table's records as the lines CCP
+shipped, including a table this crate has no model for yet.
+
+## Or keep it in SQLite
+
+The `sqlite` feature does the same in a SQLite file, which plain SQL can also
+query. Use `sqlite-bundled` to compile SQLite in, which Windows needs.
+
+```toml
+[dependencies]
+eve-sde = { version = "0.3", features = ["download", "sqlite-bundled"] }
 ```
 
 ```rust
@@ -124,17 +158,9 @@ use eve_sde::Sde;
 use eve_sde::download::Client;
 use eve_sde::sqlite;
 
-sqlite::update(&Client::new("my-app/1.0"), "sde")?; // download and import into the `sde` folder
-let sde = Sde::open_sqlite("sde")?;               // the same lookups as above
-let jita = sde.system_id("Jita")?;
+sqlite::update(&Client::new("my-app/1.0"), "sde")?;
+let sde = Sde::open_sqlite("sde")?; // the same lookups, the same answers
 ```
-
-`sqlite::update_with_progress` does the same and reports each step, such as
-for a progress bar, and can be cancelled until the import begins.
-
-Importing a whole SDE takes about 6 s and makes a file of about 420 MB. Each
-build gets its own file, so an update never touches a store that another
-process has open.
 
 Each file of the SDE becomes a table with a `key`, an English `name`, a
 lower-case `name_key` and the record as JSON in `data`, so plain SQL reaches
@@ -144,7 +170,12 @@ every field for anything the methods don't cover:
 SELECT key, name FROM types WHERE data ->> '$.groupID' = 25;
 ```
 
-`sqlite::Store::open("sde")?.connection()` runs queries like that.
+`sqlite::Store::open("sde")?.connection()` runs queries like that. Importing
+takes about 4 s and makes a file of about 390 MB, and a store can move
+between threads but not be shared.
+
+Both kinds of store live in one folder and share one `sde.zip`, so having
+both costs one download. Pick `store` unless you want SQL.
 
 ## Tests
 

@@ -98,8 +98,9 @@ dependencies = [
 
 [[package]]
 name = "eve-sde"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
+ "crc32fast",
  "eve-sde",
  "rusqlite",
  "serde",

@@ -1,6 +1,6 @@
 [package]
 name = "eve-sde"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.89"
 description = "Load, search and update EVE Online's Static Data Export (SDE)"
@@ -21,6 +21,7 @@ members = ["xtask"]
 resolver = "3"
 
 [workspace.dependencies]
+crc32fast = "1.5.2"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 zip = { version = "9.0.5", default-features = false, features = ["deflate-flate2-zlib-rs"] }
@@ -30,12 +31,17 @@ default = ["archive"]
 archive = ["dep:zip", "dep:serde", "dep:serde_json"]
 download = ["archive", "dep:ureq", "dep:tempfile"]
 test-support = ["archive"]
+# The packed record store: one file per build, with an index of its own.
+store = ["archive", "dep:tempfile", "dep:crc32fast"]
 # The SQLite store, linked against the system's SQLite.
 sqlite = ["archive", "dep:rusqlite", "dep:tempfile"]
 # The SQLite store, with SQLite compiled in.
 sqlite-bundled = ["sqlite", "rusqlite/bundled"]
 
 [dependencies]
+# Already in the tree through `zip`, so the store's checksums cost no new
+# dependency: the same version is compiled either way.
+crc32fast = { workspace = true, optional = true }
 rusqlite = { version = "0.40.2", default-features = false, features = ["cache"], optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
@@ -44,6 +50,9 @@ ureq = { version = "3.4.2", optional = true }
 zip = { workspace = true, optional = true }
 
 [dev-dependencies]
+# The packed store's tests check a header against its checksum the way a
+# reader of the layout docs would, rather than through the crate.
+crc32fast = { workspace = true }
 # The integration tests build their archives with the `testing` module.
 eve-sde = { path = ".", features = ["test-support"] }
 tempfile = "3.27.0"

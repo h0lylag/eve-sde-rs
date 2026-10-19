@@ -3,9 +3,10 @@
 //! CCP publishes the SDE as a ZIP of JSON Lines files, one per table. This
 //! crate reads it in two ways:
 //!
-//! - [`Sde`] holds the whole SDE, in memory or in a SQLite store, and looks
-//!   things up: by name, along the item hierarchy, into dogma, across the
-//!   map, and the names the SDE leaves out.
+//! - [`Sde`] holds the whole SDE, in memory or in a store on disk, and
+//!   looks things up: by name, along the item hierarchy, into dogma, across
+//!   the map, and the names the SDE leaves out. A store comes in two kinds,
+//!   [`store`] and [`sqlite`], with the same answers either way.
 //! - [`Archive`] reads one table at a time, one record at a time with
 //!   [`Archive::records`] or into a map with [`Archive::table`], for code
 //!   that copies the SDE somewhere else.
@@ -47,9 +48,12 @@
 //! - `archive` (default): [`Sde`] in memory, [`Archive`], the models and the
 //!   table list. Text is English only.
 //! - `download`: [`download`], which checks for new builds and downloads them.
-//! - `sqlite`: [`sqlite`], a local SQLite copy of the whole SDE that [`Sde`]
-//!   can look things up in, linked against the system's SQLite.
-//!   `sqlite-bundled` compiles SQLite in.
+//! - `store`: [`store`], a local copy of the whole SDE in one file, with an
+//!   index of its own, that [`Sde`] can look things up in. Pure Rust, and
+//!   several processes can read one store.
+//! - `sqlite`: [`sqlite`], the same in SQLite, linked against the system's
+//!   SQLite, which plain SQL can also query. `sqlite-bundled` compiles
+//!   SQLite in.
 //! - `test-support`: [`testing`], which builds synthetic archives for tests.
 //!
 //! With no features, only [`ids`], [`names`] and the [`Slot`] and
@@ -81,7 +85,7 @@ mod error;
     reason = "the models mirror CCP's records, which hold many independent flags"
 )]
 pub mod model;
-#[cfg(any(feature = "download", feature = "sqlite"))]
+#[cfg(any(feature = "download", feature = "sqlite", feature = "store"))]
 mod parts;
 #[cfg(feature = "archive")]
 mod sde;
@@ -89,6 +93,8 @@ mod sde;
 mod space;
 #[cfg(feature = "archive")]
 mod tables;
+#[cfg(any(feature = "sqlite", feature = "store"))]
+mod update;
 
 #[cfg(feature = "archive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "archive")))]
@@ -107,6 +113,15 @@ pub use space::{SecurityBand, SpaceKind};
 #[cfg(feature = "archive")]
 #[cfg_attr(docsrs, doc(cfg(feature = "archive")))]
 pub use tables::{Key, KeyKind, Record, TableInfo, TableVisitor, tables, visit_tables};
+#[cfg(any(feature = "sqlite", feature = "store"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "sqlite", feature = "store"))))]
+pub use update::ImportOutcome;
+#[cfg(all(feature = "download", any(feature = "sqlite", feature = "store")))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "download", any(feature = "sqlite", feature = "store"))))
+)]
+pub use update::{Step, ZIP_FILE};
 
 #[cfg(feature = "download")]
 #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
@@ -115,6 +130,10 @@ pub mod download;
 #[cfg(feature = "sqlite")]
 #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
 pub mod sqlite;
+
+#[cfg(feature = "store")]
+#[cfg_attr(docsrs, doc(cfg(feature = "store")))]
+pub mod store;
 
 #[cfg(feature = "test-support")]
 #[cfg_attr(docsrs, doc(cfg(feature = "test-support")))]

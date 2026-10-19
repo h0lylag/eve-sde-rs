@@ -677,3 +677,114 @@ fn sqlite_update_downloads_an_unreadable_zip_again() {
     );
     assert_eq!(local_build(&zip).unwrap().unwrap().build_number, 7);
 }
+
+#[cfg(feature = "store")]
+#[test]
+fn store_update_downloads_then_imports_the_latest_build() {
+    use eve_sde::ids::TypeId;
+    use eve_sde::store::{self, ImportOutcome, Step, Store};
+
+    let rifter =
+        r#"{"_key":587,"groupID":25,"name":{"en":"Rifter"},"portionSize":1,"published":true}"#;
+    let zip = ArchiveBuilder::new(7).rows::<Type>(rifter).into_bytes();
+    let client = client(&release_server(7, vec![(7, zip)]));
+    let dir = tempfile::tempdir().unwrap();
+    let store_dir = dir.path().join("sde");
+
+    let mut steps = Vec::new();
+    let outcome = store::update_with_progress(&client, &store_dir, |step| {
+        steps.push(step);
+        ControlFlow::Continue(())
+    });
+    assert_eq!(outcome.unwrap(), ImportOutcome::Imported);
+    assert_eq!(steps.first(), Some(&Step::Checking));
+    assert!(matches!(steps[1], Step::Downloading { build: 7, .. }));
+    assert_eq!(steps.last(), Some(&Step::Importing { build: 7 }));
+
+    assert_eq!(
+        store::update(&client, &store_dir).unwrap(),
+        ImportOutcome::UpToDate
+    );
+    assert!(store_dir.join(store::ZIP_FILE).exists());
+    let store = Store::open(&store_dir).unwrap();
+    assert_eq!(store.build().build_number, 7);
+    assert_eq!(
+        store.get::<Type>(TypeId(587)).unwrap().unwrap().name,
+        "Rifter"
+    );
+    assert!(store.skipped().is_empty());
+    store.verify().unwrap();
+}
+
+/// The packed store of this build, as its layout names it.
+#[cfg(feature = "store")]
+fn store_file_name(build: u32) -> String {
+    format!("sde-{build}-v{}.sde", eve_sde::store::LAYOUT_VERSION)
+}
+
+/// The SQLite store of this build, as its layout names it.
+#[cfg(feature = "sqlite")]
+fn sqlite_file_name(build: u32) -> String {
+    format!("sde-{build}-v{}.sqlite", eve_sde::sqlite::LAYOUT_VERSION)
+}
+
+/// Both kinds of store keep their builds in one folder and share one ZIP, so
+/// having both costs one download, not two.
+#[cfg(all(feature = "store", feature = "sqlite"))]
+#[test]
+fn both_kinds_of_store_share_one_folder_and_one_zip() {
+    use eve_sde::ids::TypeId;
+    use eve_sde::{ImportOutcome, Step, sqlite, store};
+
+    let rifter =
+        r#"{"_key":587,"groupID":25,"name":{"en":"Rifter"},"portionSize":1,"published":true}"#;
+    let zip = ArchiveBuilder::new(7).rows::<Type>(rifter).into_bytes();
+    let client = client(&release_server(7, vec![(7, zip)]));
+    let dir = tempfile::tempdir().unwrap();
+
+    assert_eq!(
+        sqlite::update(&client, dir.path()).unwrap(),
+        ImportOutcome::Imported
+    );
+
+    // The packed store imports from the ZIP the SQLite one downloaded.
+    let mut steps = Vec::new();
+    let outcome = store::update_with_progress(&client, dir.path(), |step| {
+        steps.push(step);
+        ControlFlow::Continue(())
+    });
+    assert_eq!(outcome.unwrap(), ImportOutcome::Imported);
+    assert_eq!(steps, [Step::Checking, Step::Importing { build: 7 }]);
+
+    // Both stores are there, beside the one ZIP and its lock, and both
+    // answer.
+    let names = file_names(dir.path());
+    assert_eq!(
+        names,
+        [
+            ".sde.zip.lock",
+            &sqlite_file_name(7),
+            &store_file_name(7),
+            eve_sde::ZIP_FILE,
+        ],
+        "{names:?}"
+    );
+    for sde in [
+        eve_sde::Sde::open_sqlite(dir.path()).unwrap(),
+        eve_sde::Sde::open_store(dir.path()).unwrap(),
+    ] {
+        assert_eq!(sde.build().build_number, 7);
+        assert_eq!(sde.type_id("rifter").unwrap(), Some(TypeId(587)));
+    }
+
+    // And neither one's cleanup touches the other's files.
+    assert_eq!(
+        store::update(&client, dir.path()).unwrap(),
+        ImportOutcome::UpToDate
+    );
+    assert_eq!(
+        sqlite::update(&client, dir.path()).unwrap(),
+        ImportOutcome::UpToDate
+    );
+    assert_eq!(file_names(dir.path()), names);
+}
