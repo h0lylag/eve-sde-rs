@@ -6,7 +6,7 @@
 //! one binary search and one read, so a store opens in about a millisecond
 //! and costs a few KiB until something is looked up.
 //!
-//! A whole SDE imports in about 2.5 s into a file of about 525 MiB, so a
+//! A whole SDE imports in about 2 s into a file of about 575 MiB, so a
 //! folder needs room for two while an import runs. [`Store::open`] takes
 //! under 100 µs, a record about 2 µs once its table's index is loaded, and
 //! that index costs one read of 24 bytes a row the first time a table is

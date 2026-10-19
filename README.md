@@ -83,7 +83,8 @@ for ty in archive.records::<Type>()? {
 }
 ```
 
-Reading every table takes about 1.2 s and 60 MiB at peak.
+Reading every record of every table one at a time takes about 1.3 s and
+under 10 MiB of memory.
 
 - `eve_sde::model` has one struct per table. `eve_sde::tables()` lists the
   tables, and `visit_tables` runs code over each.
@@ -134,7 +135,7 @@ store::update(&Client::new("my-app/1.0"), "sde")?; // download and import into .
 let sde = Sde::open_store("sde")?;
 ```
 
-- Import takes about 2.5 s and writes a file of about 525 MB.
+- Import takes about 2 s and writes a file of about 600 MB.
 - Each build gets its own file, so an update does not touch a store that is
   open. Several threads and processes can read one store.
 - `store::Store::verify()` checks every record against its checksum.
@@ -161,7 +162,7 @@ SELECT key, name FROM types WHERE data ->> '$.groupID' = 25;
 
 - `sqlite::Store::open("sde")?.connection()` gives the `rusqlite`
   connection.
-- Import takes about 4 s and writes a file of about 390 MB.
+- Import takes about 5 s and writes a file of about 425 MB.
 - A SQLite store can move between threads but cannot be shared.
 
 `store::update_with_progress` and `sqlite::update_with_progress` report each
