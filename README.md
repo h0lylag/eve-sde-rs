@@ -1,14 +1,28 @@
 # eve-sde
 
-Look things up in EVE Online's Static Data Export (SDE), read it one table
-at a time, and keep your local copy fresh.
+A Rust library for EVE Online's Static Data Export (SDE). It reads the SDE
+ZIP, looks things up in it, downloads new builds, and keeps a local copy on
+disk.
 
 ```toml
 [dependencies]
 eve-sde = "0.3"
 ```
 
-Needs Rust 1.89 or newer.
+Requires Rust 1.89 or newer.
+
+## Features
+
+| Feature          | Adds                                                        |
+| ---------------- | ----------------------------------------------------------- |
+| `archive`        | `Archive`, `Sde` in memory and the models. On by default.   |
+| `download`       | `download::Client`, which downloads new builds from CCP.    |
+| `store`          | A local copy in one packed file. Unix and Windows only.     |
+| `sqlite`         | A local copy in SQLite, linked against the system's SQLite. |
+| `sqlite-bundled` | `sqlite` with SQLite compiled in. Needed on Windows.        |
+| `test-support`   | `testing::ArchiveBuilder`, which builds synthetic archives. |
+
+With no features, only `ids`, `names` and the fitting rules are built.
 
 ## Look things up
 
@@ -26,24 +40,28 @@ sde.attribute_named(TypeId(587), "hiSlots")?; // Some(3.0)
 sde.category_of(TypeId(587))?;                // the Ship category
 ```
 
-Name searches ignore case, and there's one for types, groups, categories,
-market groups, systems, constellations, regions, stations, factions,
-corporations, dogma attributes and effects. The rest walk the tables for
-you: a type's group, category, meta group and market path, the types in a
-group, attribute values with their defaults, effects, fitting slots and
-hardpoints, gates and neighbours, and the in-game names of planets, moons,
-belts, stargates and stations, which the SDE leaves out. `sde.get::<T>(key)`
-reads any record by its key.
+`Sde` has:
 
-`Sde::load` keeps the whole SDE in memory: about 2 s to load and 350 MiB.
-To start in under a millisecond with a few MiB instead, keep a local copy
-([below](#keep-a-local-copy)) and open it with `Sde::open_store`. Either way
-you get the same methods and the same answers.
+- Name searches, case-insensitive, for types, groups, categories, market
+  groups, systems, constellations, regions, stations, factions,
+  corporations, dogma attributes and effects.
+- A type's group, category, meta group and market path, and the types in a
+  group.
+- Attribute values with their defaults, effects, fitting slots and
+  hardpoints.
+- Stargates and neighbouring systems.
+- Names of planets, moons, belts, stargates and stations, which the SDE
+  does not include.
+- `sde.get::<T>(key)`, which reads any record by its key.
+
+`Sde::load` holds the whole SDE in memory: about 2 s to load and 350 MiB.
+`Sde::open_store` and `Sde::open_sqlite` open a [local copy](#local-copy)
+instead, which takes under a millisecond. All three give the same answers.
 
 ## Read tables
 
-CCP publishes the SDE as a ZIP of JSON Lines files, one per table. Open it
-with `Archive`, then read only the tables you need:
+The SDE is a ZIP of JSON Lines files, one per table. `Archive` reads one
+table at a time:
 
 ```rust
 use eve_sde::Archive;
@@ -56,7 +74,7 @@ println!("build {}", archive.build().build_number);
 // A whole table, keyed by ID.
 let groups = archive.table::<Group>()?;
 
-// Or one record at a time, holding only the current line in memory.
+// One record at a time.
 for ty in archive.records::<Type>()? {
     let ty = ty?;
     if ty.id == TypeId(587) {
@@ -65,93 +83,65 @@ for ty in archive.records::<Type>()? {
 }
 ```
 
-Reading every table this way takes about 1.2 s and 60 MiB at peak. Each
-table's model is in `eve_sde::model`, and `eve_sde::tables()` lists them all.
-`visit_tables` runs the same code over every table.
+Reading every table takes about 1.2 s and 60 MiB at peak.
 
-IDs that tables share have their own types, such as `TypeId`, `GroupId` and
-`SystemId`, so a system ID cannot be passed where a type ID is expected.
-`eve_sde::ids::kind(id)` tells what kind of thing a raw ID is from its range.
-
-The SDE leaves most planet, moon, belt and station names out.
-`eve_sde::names` builds them the way the game does, e.g.
-`Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
-
-Try it on a real file:
+- `eve_sde::model` has one struct per table. `eve_sde::tables()` lists the
+  tables, and `visit_tables` runs code over each.
+- IDs have their own types, such as `TypeId`, `GroupId` and `SystemId`.
+  `eve_sde::ids::kind(id)` tells what kind of thing a raw ID is from its
+  range.
+- `eve_sde::names` builds the names the SDE leaves out, such as
+  `Jita IV - Moon 4 - Caldari Navy Assembly Plant`.
 
 ```sh
 cargo run --release --example lookup -- sde.zip Jita
 cargo run --release --example type_name -- sde.zip 587 Rifter
 ```
 
-## Get the SDE
+## Download
 
-Grab it by hand from <https://developers.eveonline.com/static-data/>, or
-turn on the `download` feature and let the crate handle it for you:
-
-```toml
-[dependencies]
-eve-sde = { version = "0.3", features = ["download"] }
-```
+The SDE is at <https://developers.eveonline.com/static-data/>. With the
+`download` feature:
 
 ```rust
 use eve_sde::download::Client;
 
 let client = Client::new("my-app/1.0");
-client.update("sde.zip")?; // only downloads if there's a newer build
+client.update("sde.zip")?; // downloads only if CCP has a newer build
 ```
 
-`update` won't ever replace a newer build with an older one, even if two
-processes race to write the same file at the same time.
+`update` never replaces a newer build with an older one, including when two
+processes update the same file at once.
 
 ```sh
 cargo run --release --features download --example update -- sde.zip
 ```
 
-## Keep a local copy
+## Local copy
 
-An app that starts often should not read the ZIP every time. The `store`
-feature keeps the whole SDE in one local file with an index of its own, so
-looking things up needs no ZIP and no loading:
+`store` and `sqlite` import the SDE into a folder, so a program does not
+read the ZIP each time it starts. Both stores can share one folder and one
+`sde.zip`.
 
-```toml
-[dependencies]
-eve-sde = { version = "0.3", features = ["download", "store"] }
-```
+### `store`
 
 ```rust
 use eve_sde::Sde;
 use eve_sde::download::Client;
 use eve_sde::store;
 
-store::update(&Client::new("my-app/1.0"), "sde")?; // download and import into the `sde` folder
-let sde = Sde::open_store("sde")?;                 // the same lookups as above
-let jita = sde.system_id("Jita")?;
+store::update(&Client::new("my-app/1.0"), "sde")?; // download and import into ./sde
+let sde = Sde::open_store("sde")?;
 ```
 
-`store::update_with_progress` does the same and reports each step, such as
-for a progress bar, and can be cancelled until the import begins.
+- Import takes about 2.5 s and writes a file of about 525 MB.
+- Each build gets its own file, so an update does not touch a store that is
+  open. Several threads and processes can read one store.
+- `store::Store::verify()` checks every record against its checksum.
+- `Store::lines("types")` returns a table's records as CCP's original
+  lines, including tables this crate has no model for.
 
-Importing a whole SDE takes about 2.5 s and makes a file of about 525 MB.
-Each build gets its own file, so an update never touches a store that another
-process has open, and several threads or processes can read one store at
-once. Opening takes well under a millisecond and a few KiB; a table's index
-is read the first time something asks for that table.
-
-The store is written once and never again, and every record's checksum is in
-its index, so `store::Store::verify()` can say whether a store is still
-sound. `Store::lines("types")` reads a table's records as the lines CCP
-shipped, including a table this crate has no model for yet.
-
-## Or keep it in SQLite
-
-The `sqlite` feature does the same in a SQLite file, which plain SQL can also
-query. Use `sqlite-bundled` to compile SQLite in, which Windows needs.
-
-```toml
-[dependencies]
-eve-sde = { version = "0.3", features = ["download", "sqlite-bundled"] }
-```
+### `sqlite`
 
 ```rust
 use eve_sde::Sde;
@@ -159,28 +149,28 @@ use eve_sde::download::Client;
 use eve_sde::sqlite;
 
 sqlite::update(&Client::new("my-app/1.0"), "sde")?;
-let sde = Sde::open_sqlite("sde")?; // the same lookups, the same answers
+let sde = Sde::open_sqlite("sde")?;
 ```
 
-Each file of the SDE becomes a table with a `key`, an English `name`, a
-lower-case `name_key` and the record as JSON in `data`, so plain SQL reaches
-every field for anything the methods don't cover:
+Each SDE file becomes a table with a `key`, an English `name`, a lower-case
+`name_key`, and the record as JSON in `data`:
 
 ```sql
 SELECT key, name FROM types WHERE data ->> '$.groupID' = 25;
 ```
 
-`sqlite::Store::open("sde")?.connection()` runs queries like that. Importing
-takes about 4 s and makes a file of about 390 MB, and a store can move
-between threads but not be shared.
+- `sqlite::Store::open("sde")?.connection()` gives the `rusqlite`
+  connection.
+- Import takes about 4 s and writes a file of about 390 MB.
+- A SQLite store can move between threads but cannot be shared.
 
-Both kinds of store live in one folder and share one `sde.zip`, so having
-both costs one download. Pick `store` unless you want SQL.
+`store::update_with_progress` and `sqlite::update_with_progress` report each
+step and can be cancelled until the import starts.
 
-## Tests
+## Testing
 
 The `test-support` feature adds `eve_sde::testing::ArchiveBuilder`, which
-builds small synthetic SDE archives, so your tests need no real SDE data.
+builds small synthetic SDE archives for tests.
 
 ## Disclaimer
 
