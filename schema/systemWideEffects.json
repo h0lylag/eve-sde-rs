@@ -1,0 +1,36 @@
+{
+  "file": "systemWideEffects.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffs": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "eligibleTypeListID": {
+        "required": false,
+        "type": "integer"
+      },
+      "environmentTypeID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+# Tests fail by panicking, so `unwrap` is fine there.
+allow-unwrap-in-tests = true

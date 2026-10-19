@@ -1,0 +1,40 @@
+{
+  "file": "controlTowerResources.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "resources": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "factionID": {
+                "required": false,
+                "type": "integer"
+              },
+              "minSecurityLevel": {
+                "required": false,
+                "type": "float"
+              },
+              "purpose": {
+                "required": true,
+                "type": "integer"
+              },
+              "quantity": {
+                "required": true,
+                "type": "integer"
+              },
+              "resourceTypeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

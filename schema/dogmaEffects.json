@@ -1,0 +1,148 @@
+{
+  "file": "dogmaEffects.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "disallowAutoRepeat": {
+        "required": true,
+        "type": "bool"
+      },
+      "dischargeAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "distribution": {
+        "required": false,
+        "type": "integer"
+      },
+      "durationAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "effectCategoryID": {
+        "required": true,
+        "type": "integer"
+      },
+      "electronicChance": {
+        "required": true,
+        "type": "bool"
+      },
+      "falloffAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "fittingUsageChanceAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "guid": {
+        "required": false,
+        "type": "string"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "isAssistance": {
+        "required": true,
+        "type": "bool"
+      },
+      "isOffensive": {
+        "required": true,
+        "type": "bool"
+      },
+      "isWarpSafe": {
+        "required": true,
+        "type": "bool"
+      },
+      "modifierInfo": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "domain": {
+                "required": true,
+                "type": "string"
+              },
+              "effectID": {
+                "required": false,
+                "type": "integer"
+              },
+              "func": {
+                "required": true,
+                "type": "string"
+              },
+              "groupID": {
+                "required": false,
+                "type": "integer"
+              },
+              "modifiedAttributeID": {
+                "required": false,
+                "type": "integer"
+              },
+              "modifyingAttributeID": {
+                "required": false,
+                "type": "integer"
+              },
+              "operation": {
+                "required": false,
+                "type": "integer"
+              },
+              "skillTypeID": {
+                "required": false,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "npcActivationChanceAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "npcUsageChanceAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "propulsionChance": {
+        "required": true,
+        "type": "bool"
+      },
+      "published": {
+        "required": true,
+        "type": "bool"
+      },
+      "rangeAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "rangeChance": {
+        "required": true,
+        "type": "bool"
+      },
+      "resistanceAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "trackingSpeedAttributeID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

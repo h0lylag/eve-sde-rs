@@ -1,0 +1,19 @@
+{
+  "file": "schoolMap.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "schoolID": {
+        "required": true,
+        "type": "integer"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

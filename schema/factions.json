@@ -1,0 +1,61 @@
+{
+  "file": "factions.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "corporationID": {
+        "required": false,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "flatLogo": {
+        "required": false,
+        "type": "string"
+      },
+      "flatLogoWithName": {
+        "required": false,
+        "type": "string"
+      },
+      "iconID": {
+        "required": true,
+        "type": "integer"
+      },
+      "memberRaces": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "militiaCorporationID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "shortDescription": {
+        "required": false,
+        "type": "text"
+      },
+      "sizeFactor": {
+        "required": true,
+        "type": "float"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "uniqueName": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

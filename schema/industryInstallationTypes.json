@@ -1,0 +1,24 @@
+{
+  "file": "industryInstallationTypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "assemblyLines": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "assemblyLineID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

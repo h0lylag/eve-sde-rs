@@ -1,0 +1,79 @@
+{
+  "file": "dogmaAttributes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "attributeCategoryID": {
+        "required": false,
+        "type": "integer"
+      },
+      "chargeRechargeTimeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "dataType": {
+        "required": true,
+        "type": "integer"
+      },
+      "defaultValue": {
+        "required": true,
+        "type": "float"
+      },
+      "description": {
+        "required": false,
+        "type": "string"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "displayWhenZero": {
+        "required": true,
+        "type": "bool"
+      },
+      "highIsGood": {
+        "required": true,
+        "type": "bool"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "maxAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "minAttributeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "published": {
+        "required": true,
+        "type": "bool"
+      },
+      "stackable": {
+        "required": true,
+        "type": "bool"
+      },
+      "tooltipDescription": {
+        "required": false,
+        "type": "text"
+      },
+      "tooltipTitle": {
+        "required": false,
+        "type": "text"
+      },
+      "unitID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

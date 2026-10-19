@@ -1,0 +1,63 @@
+{
+  "file": "fighterAbilitiesByType.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "abilitySlot0": {
+        "required": true,
+        "type": {
+          "object": {
+            "abilityID": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "abilitySlot1": {
+        "required": true,
+        "type": {
+          "object": {
+            "abilityID": {
+              "required": true,
+              "type": "integer"
+            },
+            "cooldownSeconds": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "abilitySlot2": {
+        "required": false,
+        "type": {
+          "object": {
+            "abilityID": {
+              "required": true,
+              "type": "integer"
+            },
+            "charges": {
+              "required": false,
+              "type": {
+                "object": {
+                  "chargeCount": {
+                    "required": true,
+                    "type": "integer"
+                  },
+                  "rearmTimeSeconds": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

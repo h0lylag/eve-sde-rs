@@ -1,0 +1,1573 @@
+# What the generator cannot infer from the SDE: struct names, ID types,
+# integer widths and docs. `cargo xtask models` reads this file and `schema/`;
+# `xtask/src/settings.rs` documents each key.
+
+# The ID type of a JSON field name wherever it holds a number, unless the
+# field sets its own `type`.
+[ids]
+applicableTypes = "TypeId"
+asteroidBeltIDs = "CelestialId"
+associatedShipTypes = "TypeId"
+attributeID = "AttributeId"
+blueprintTypeID = "TypeId"
+categoryID = "CategoryId"
+categoryIDs = "CategoryId"
+compressedTypeID = "TypeId"
+constellationID = "ConstellationId"
+constellationIDs = "ConstellationId"
+corporationID = "CorporationId"
+disallowedAnchorCategories = "CategoryId"
+disallowedAnchorGroups = "GroupId"
+dischargeAttributeID = "AttributeId"
+dogmaAttributeID = "AttributeId"
+durationAttributeID = "AttributeId"
+effectBeaconTypeID = "TypeId"
+effectID = "EffectId"
+environmentTypeID = "TypeId"
+excludedCategoryIDs = "CategoryId"
+excludedGroupIDs = "GroupId"
+excludedTypeIDs = "TypeId"
+factionID = "FactionId"
+falloffAttributeID = "AttributeId"
+fittingUsageChanceAttributeID = "AttributeId"
+groupID = "GroupId"
+groupIDs = "GroupId"
+includedCategoryIDs = "CategoryId"
+includedGroupIDs = "GroupId"
+includedTypeIDs = "TypeId"
+initialAgentGiftTypeID = "TypeId"
+itemTypeID = "TypeId"
+licenseTypeID = "TypeId"
+marketGroupID = "MarketGroupId"
+materialTypeID = "TypeId"
+maxAttributeID = "AttributeId"
+metaGroupID = "MetaGroupId"
+militiaCorporationID = "CorporationId"
+minAttributeID = "AttributeId"
+modifiedAttributeID = "AttributeId"
+modifyingAttributeID = "AttributeId"
+moonIDs = "CelestialId"
+npcActivationChanceAttributeID = "AttributeId"
+npcStationIDs = "StationId"
+npcUsageChanceAttributeID = "AttributeId"
+objectiveTypeID = "TypeId"
+orbitID = "CelestialId"
+ownerID = "CorporationId"
+parentGroupID = "MarketGroupId"
+pins = "TypeId"
+planetIDs = "CelestialId"
+rangeAttributeID = "AttributeId"
+recommendedFor = "TypeId"
+regionID = "RegionId"
+resistanceAttributeID = "AttributeId"
+resourceTypeID = "TypeId"
+resultingType = "TypeId"
+rewardTypeID = "TypeId"
+shipTypeID = "TypeId"
+skillID = "TypeId"
+skillTypeID = "TypeId"
+solarSystemID = "SystemId"
+solarSystemIDs = "SystemId"
+stargateID = "StargateId"
+stargateIDs = "StargateId"
+starID = "CelestialId"
+stationID = "StationId"
+trackingSpeedAttributeID = "AttributeId"
+typeID = "TypeId"
+type_id = "TypeId"
+types = "TypeId"
+variationParentTypeID = "TypeId"
+
+[modules.character]
+doc = "Character creation, skills, certificates and corporation roles."
+
+[modules.content]
+doc = '''
+Missions, dungeons, campaigns and other game content.
+
+Deeply nested records that few programs read (military campaign
+annotations, freelance job schemas) keep those parts as raw JSON.'''
+
+[modules.cosmetic]
+doc = "Icons, graphics, SKINs, the SKINR designer and the ship tree."
+
+[modules.dogma]
+doc = "Dogma: the attribute and effect system behind every item's numbers."
+
+[modules.industry]
+doc = "Industry: blueprints, assembly lines and their modifiers."
+
+[modules.map]
+doc = '''
+The map from regions down to stargates, plus landmarks, sovereignty
+resources and planetary industry schematics.'''
+
+[modules.misc]
+doc = "Everything else: fighters, sovereignty, control towers, contraband."
+
+[modules.npc]
+doc = "NPC corporations, characters, stations and factions."
+
+[modules.types]
+doc = "Items: types, groups, categories, market groups and what hangs off them."
+
+[structs.Race]
+module = "character"
+file = "races.jsonl"
+doc = "`races.jsonl`"
+
+[structs.Race.fields.skills]
+type = "u32"
+key = "TypeId"
+doc = "Skill type ID to starting level."
+
+[structs.Bloodline]
+module = "character"
+file = "bloodlines.jsonl"
+doc = "`bloodlines.jsonl`"
+
+[structs.Bloodline.fields.charisma]
+type = "i32"
+
+[structs.Bloodline.fields.intelligence]
+type = "i32"
+
+[structs.Bloodline.fields.memory]
+type = "i32"
+
+[structs.Bloodline.fields.perception]
+type = "i32"
+
+[structs.Bloodline.fields.willpower]
+type = "i32"
+
+[structs.Ancestry]
+module = "character"
+file = "ancestries.jsonl"
+doc = "`ancestries.jsonl`"
+
+[structs.Ancestry.fields.charisma]
+type = "i32"
+
+[structs.Ancestry.fields.intelligence]
+type = "i32"
+
+[structs.Ancestry.fields.memory]
+type = "i32"
+
+[structs.Ancestry.fields.perception]
+type = "i32"
+
+[structs.Ancestry.fields.willpower]
+type = "i32"
+
+[structs.School]
+module = "character"
+file = "schools.jsonl"
+doc = "`schools.jsonl`"
+
+[structs.School.fields.careerAgents]
+type = "u32"
+
+[structs.School.fields.startingStations]
+type = "u32"
+
+[structs.SchoolMap]
+module = "character"
+file = "schoolMap.jsonl"
+doc = "`schoolMap.jsonl`: the solar system of each school."
+
+[structs.CharacterAttribute]
+module = "character"
+file = "characterAttributes.jsonl"
+doc = "`characterAttributes.jsonl`: Intelligence, Memory and so on."
+
+[structs.CharacterTitle]
+module = "character"
+file = "characterTitles.jsonl"
+key = "String"
+doc = "`characterTitles.jsonl`. The `id` is a UUID."
+
+[structs.CloneGrade]
+module = "character"
+file = "cloneGrades.jsonl"
+doc = '''
+`cloneGrades.jsonl`: an Alpha clone grade, such as Alpha Caldari, and the
+skill levels it can train.'''
+
+[structs.CloneGrade.fields.skills]
+type = "SkillLevel"
+
+[structs.Certificate]
+module = "character"
+file = "certificates.jsonl"
+doc = "`certificates.jsonl`"
+
+[structs.Certificate.fields.skillTypes]
+type = "CertificateSkill"
+
+[structs.CertificateSkill]
+module = "character"
+doc = "Skill levels needed for each certificate grade."
+
+[structs.CertificateSkill.fields._key]
+name = "type_id"
+type = "TypeId"
+
+[structs.CertificateSkill.fields.basic]
+type = "u8"
+
+[structs.CertificateSkill.fields.standard]
+type = "u8"
+
+[structs.CertificateSkill.fields.improved]
+type = "u8"
+
+[structs.CertificateSkill.fields.advanced]
+type = "u8"
+
+[structs.CertificateSkill.fields.elite]
+type = "u8"
+
+[structs.SkillPlan]
+module = "character"
+file = "skillPlans.jsonl"
+doc = "`skillPlans.jsonl`"
+
+[structs.SkillPlan.fields.npcCorporationDivision]
+type = "u32"
+
+[structs.SkillPlan.fields.milestones]
+type = "Milestone"
+
+[structs.SkillPlan.fields.skillRequirements]
+type = "SkillLevel"
+
+[structs.Milestone]
+module = "character"
+
+[structs.Milestone.fields.level]
+type = "u8"
+
+[structs.ExpertSystem]
+module = "character"
+file = "expertSystems.jsonl"
+doc = "`expertSystems.jsonl`"
+
+[structs.ExpertSystem.fields.skillsGranted]
+type = "SkillLevel"
+
+[structs.CorporationActivity]
+module = "character"
+file = "corporationActivities.jsonl"
+doc = "`corporationActivities.jsonl`"
+
+[structs.CorporationRole]
+module = "character"
+file = "corporationRoles.jsonl"
+doc = "`corporationRoles.jsonl`"
+
+[structs.CorporationRoleGroup]
+module = "character"
+file = "corporationRoleGroups.jsonl"
+doc = "`corporationRoleGroups.jsonl`"
+
+[structs.Mission]
+module = "content"
+file = "missions.jsonl"
+doc = "`missions.jsonl`"
+
+[structs.Mission.fields.messages]
+doc = "Message key to English text."
+
+[structs.Mission.fields.extraStandings]
+key = "FactionId"
+doc = "Faction ID to standing change."
+
+[structs.Mission.fields.killMission]
+type = "KillMission"
+
+[structs.Mission.fields.courierMission]
+type = "CourierMission"
+
+[structs.Mission.fields.missionRewards]
+type = "MissionRewards"
+
+[structs.KillMission]
+module = "content"
+
+[structs.CourierMission]
+module = "content"
+
+[structs.MissionRewards]
+module = "content"
+
+[structs.MissionRewards.fields.reward]
+type = "MissionReward"
+
+[structs.MissionRewards.fields.bonusReward]
+type = "MissionReward"
+
+[structs.MissionReward]
+module = "content"
+
+[structs.EpicArc]
+module = "content"
+file = "epicArcs.jsonl"
+doc = "`epicArcs.jsonl`"
+
+[structs.EpicArc.fields.missions]
+type = "EpicArcMission"
+
+[structs.EpicArcMission]
+module = "content"
+
+[structs.EpicArcMission.fields._key]
+name = "mission_id"
+
+[structs.EpicArcMission.fields.nextMissions]
+type = "u32"
+
+[structs.Dungeon]
+module = "content"
+file = "dungeons.jsonl"
+doc = "`dungeons.jsonl`"
+
+[structs.Dungeon.fields.allowedShipsList]
+type = "u32"
+
+[structs.Archetype]
+module = "content"
+file = "archetypes.jsonl"
+doc = "`archetypes.jsonl`: dungeon archetypes."
+
+[structs.MercenaryTacticalOperation]
+module = "content"
+file = "mercenaryTacticalOperations.jsonl"
+doc = "`mercenaryTacticalOperations.jsonl`"
+
+[structs.MilitaryCampaign]
+module = "content"
+file = "militaryCampaigns.jsonl"
+key = "String"
+doc = "`militaryCampaigns.jsonl`. The `id` is a UUID."
+
+[structs.MilitaryCampaign.fields.issuer]
+type = "Issuer"
+
+[structs.MilitaryCampaign.fields.annotations]
+raw = "value"
+doc = "Raw JSON: dozens of image paths and localized texts."
+
+[structs.MilitaryCampaignObjective]
+module = "content"
+file = "militaryCampaignObjectives.jsonl"
+key = "String"
+doc = "`militaryCampaignObjectives.jsonl`. The `id` is a UUID."
+
+[structs.MilitaryCampaignObjective.fields.issuer]
+type = "Issuer"
+
+[structs.MilitaryCampaignObjective.fields.rewards]
+raw = "value"
+doc = "Raw JSON: ISK, loyalty point and standing rewards."
+
+[structs.MilitaryCampaignObjective.fields.contributionMethodConfiguration]
+raw = "value"
+
+[structs.MilitaryCampaignObjective.fields.annotations]
+raw = "value"
+
+[structs.Issuer]
+module = "content"
+
+[structs.FreelanceJobSchemas]
+module = "content"
+file = "freelanceJobSchemas.jsonl"
+doc = "`freelanceJobSchemas.jsonl`: one record holding every job schema."
+
+[structs.FreelanceJobSchemas.fields._value]
+name = "schemas"
+raw = "items"
+doc = "Raw JSON: large, deeply nested and mostly UI text."
+
+[structs.NotificationType]
+module = "content"
+file = "notificationTypes.jsonl"
+doc = "`notificationTypes.jsonl`"
+
+[structs.AccountingEntryType]
+module = "content"
+file = "accountingEntryTypes.jsonl"
+doc = "`accountingEntryTypes.jsonl`: wallet journal entry kinds."
+
+[structs.Icon]
+module = "cosmetic"
+file = "icons.jsonl"
+doc = "`icons.jsonl`"
+
+[structs.Graphic]
+module = "cosmetic"
+file = "graphics.jsonl"
+doc = "`graphics.jsonl`"
+
+[structs.GraphicMaterialSet]
+module = "cosmetic"
+file = "graphicMaterialSets.jsonl"
+doc = "`graphicMaterialSets.jsonl`"
+
+[structs.GraphicMaterialSet.fields.colorHull]
+type = "Rgba"
+
+[structs.GraphicMaterialSet.fields.colorPrimary]
+type = "Rgba"
+
+[structs.GraphicMaterialSet.fields.colorSecondary]
+type = "Rgba"
+
+[structs.GraphicMaterialSet.fields.colorWindow]
+type = "Rgba"
+
+[structs.Skin]
+module = "cosmetic"
+file = "skins.jsonl"
+doc = "`skins.jsonl`"
+
+[structs.Skin.fields.types]
+doc = "Ship types this SKIN fits."
+
+[structs.Skin.fields.isStructureSkin]
+default = true
+
+[structs.SkinLicense]
+module = "cosmetic"
+file = "skinLicenses.jsonl"
+doc = "`skinLicenses.jsonl`: the item you buy to get a SKIN."
+
+[structs.SkinLicense.fields.duration]
+doc = "In days, or -1 for permanent."
+
+[structs.SkinLicense.fields.isSingleUse]
+default = true
+
+[structs.SkinMaterial]
+module = "cosmetic"
+file = "skinMaterials.jsonl"
+doc = "`skinMaterials.jsonl`"
+
+[structs.SkinrComponentCategory]
+module = "cosmetic"
+file = "skinrComponentCategories.jsonl"
+doc = "`skinrComponentCategories.jsonl`"
+
+[structs.SkinrComponentPointValues]
+module = "cosmetic"
+file = "skinrComponentPointValues.jsonl"
+doc = '''
+`skinrComponentPointValues.jsonl`: the points of a component category (the
+`id`).'''
+
+[structs.SkinrComponentPointValues.fields._value]
+name = "values"
+doc = "Rarity ID to points."
+
+[structs.SkinrComponentRarity]
+module = "cosmetic"
+file = "skinrComponentRarities.jsonl"
+doc = "`skinrComponentRarities.jsonl`"
+
+[structs.SkinrComponent]
+module = "cosmetic"
+file = "skinrComponents.jsonl"
+doc = "`skinrComponents.jsonl`"
+
+[structs.SkinrComponent.fields.category]
+type = "u32"
+
+[structs.SkinrComponent.fields.rarity]
+type = "u32"
+
+[structs.SkinrComponent.fields.associatedTypeIds]
+name = "associated_types"
+type = "AssociatedType"
+
+[structs.SkinrComponent.fields.sequenceBinder]
+type = "SequenceBinder"
+
+[structs.AssociatedType]
+module = "cosmetic"
+
+[structs.SequenceBinder]
+module = "cosmetic"
+
+[structs.SkinrSlotCategory]
+module = "cosmetic"
+file = "skinrSlotCategories.jsonl"
+doc = "`skinrSlotCategories.jsonl`"
+
+[structs.SkinrSlotConfiguration]
+module = "cosmetic"
+file = "skinrSlotConfigurations.jsonl"
+doc = "`skinrSlotConfigurations.jsonl`"
+
+[structs.SkinrSlotConfiguration.fields.allowAllShips]
+default = true
+
+[structs.SkinrSlotConfiguration.fields.config]
+type = "u32"
+
+[structs.SkinrSlotConfiguration.fields.ships]
+type = "u32"
+
+[structs.SkinrSlotName]
+module = "cosmetic"
+file = "skinrSlotNames.jsonl"
+doc = "`skinrSlotNames.jsonl`"
+
+[structs.SkinrSlot]
+module = "cosmetic"
+file = "skinrSlots.jsonl"
+doc = "`skinrSlots.jsonl`"
+
+[structs.SkinrSlot.fields.category]
+type = "u32"
+
+[structs.SkinrSlot.fields.allowedDesignComponentCategories]
+type = "u32"
+
+[structs.SkinrSlotsToMaterials]
+module = "cosmetic"
+file = "skinrSlotsToMaterials.jsonl"
+doc = '''
+`skinrSlotsToMaterials.jsonl`: the material in each SKINR slot for a
+faction (the `id`).'''
+
+[structs.SkinrSlotsToMaterials.fields._value]
+name = "bindings"
+type = "SlotMaterial"
+
+[structs.SlotMaterial]
+module = "cosmetic"
+
+[structs.SkinrTierThreshold]
+module = "cosmetic"
+file = "skinrTierThresholds.jsonl"
+doc = '''
+`skinrTierThresholds.jsonl`: the tier thresholds of a ship tree group (the
+`id`).'''
+
+[structs.SkinrTierThreshold.fields._value]
+name = "thresholds"
+doc = "Tier, from 1, to its threshold."
+
+[structs.ShipTreeElement]
+module = "cosmetic"
+file = "shipTreeElements.jsonl"
+doc = "`shipTreeElements.jsonl`: ship tree tags, such as Small, Combat or Shields."
+
+[structs.ShipTreeFaction]
+module = "cosmetic"
+file = "shipTreeFactions.jsonl"
+doc = "`shipTreeFactions.jsonl`: the ship tree entry of a faction (the `id`)."
+
+[structs.ShipTreeFaction.fields.elements]
+type = "u32"
+doc = "Order, from 1, to [`ShipTreeElement`](crate::model::ShipTreeElement) ID."
+
+[structs.ShipTreeGroup]
+module = "cosmetic"
+file = "shipTreeGroups.jsonl"
+doc = "`shipTreeGroups.jsonl`: ship classes in the ship tree, such as Corvette."
+
+[structs.ShipTreeGroup.fields.elements]
+type = "u32"
+doc = "Order, from 1, to [`ShipTreeElement`](crate::model::ShipTreeElement) ID."
+
+[structs.ShipTreeGroup.fields.preReqSkills]
+type = "FactionPrereqs"
+
+[structs.FactionPrereqs]
+module = "cosmetic"
+
+[structs.FactionPrereqs.fields._key]
+name = "faction_id"
+
+[structs.FactionPrereqs.fields.skills]
+type = "PrereqSkill"
+
+[structs.PrereqSkill]
+module = "cosmetic"
+
+[structs.PrereqSkill.fields._key]
+name = "type_id"
+type = "TypeId"
+
+[structs.PrereqSkill.fields.level]
+type = "u8"
+
+[structs.Attribute]
+module = "dogma"
+file = "dogmaAttributes.jsonl"
+key = "AttributeId"
+doc = "`dogmaAttributes.jsonl`. `name` is the internal name, e.g. `hiSlots`."
+
+[structs.Attribute.fields.dataType]
+type = "i32"
+
+[structs.Attribute.fields.defaultValue]
+doc = "Used when a type does not list the attribute."
+
+[structs.AttributeCategory]
+module = "dogma"
+file = "dogmaAttributeCategories.jsonl"
+doc = "`dogmaAttributeCategories.jsonl`"
+
+[structs.Effect]
+module = "dogma"
+file = "dogmaEffects.jsonl"
+key = "EffectId"
+doc = "`dogmaEffects.jsonl`. `name` is the internal name, e.g. `hiPower`."
+
+[structs.Effect.fields.distribution]
+type = "u32"
+
+[structs.Effect.fields.modifierInfo]
+type = "ModifierInfo"
+
+[structs.ModifierInfo]
+module = "dogma"
+doc = "One thing an effect changes."
+
+[structs.ModifierInfo.fields.operation]
+type = "i32"
+
+[structs.DogmaUnit]
+module = "dogma"
+file = "dogmaUnits.jsonl"
+doc = "`dogmaUnits.jsonl`"
+
+[structs.DynamicBuff]
+module = "dogma"
+file = "dbuffCollections.jsonl"
+doc = "`dbuffCollections.jsonl`: warfare links and other area buffs."
+
+[structs.DynamicBuff.fields.itemModifiers]
+type = "AttributeRef"
+
+[structs.DynamicBuff.fields.locationModifiers]
+type = "AttributeRef"
+
+[structs.DynamicBuff.fields.locationGroupModifiers]
+type = "GroupModifier"
+
+[structs.DynamicBuff.fields.locationRequiredSkillModifiers]
+type = "SkillModifier"
+
+[structs.GroupModifier]
+module = "dogma"
+
+[structs.GroupModifier.fields.dogmaAttributeID]
+name = "attribute_id"
+
+[structs.SkillModifier]
+module = "dogma"
+
+[structs.SkillModifier.fields.dogmaAttributeID]
+name = "attribute_id"
+
+[structs.AppliedProximityEffect]
+module = "dogma"
+file = "appliedProximityEffects.jsonl"
+key = "TypeId"
+doc = '''
+`appliedProximityEffects.jsonl`: buffs that a type (the `id`), such as a
+Stasis Field Effect Subpylon, applies to ships near it.'''
+
+[structs.AppliedProximityEffect.fields.dbuffs]
+doc = "[`DynamicBuff`] ID to value."
+
+[structs.LinkWithShip]
+module = "dogma"
+file = "linkWithShip.jsonl"
+key = "TypeId"
+doc = '''
+`linkWithShip.jsonl`: what happens when a ship links with a type (the
+`id`), such as a Skyhook Reagent Silo.'''
+
+[structs.LinkWithShip.fields.dbuffs]
+doc = "[`DynamicBuff`] ID to value."
+
+[structs.ProximityTrap]
+module = "dogma"
+file = "proximityTrap.jsonl"
+table = "proximity_traps"
+key = "TypeId"
+doc = '''
+`proximityTrap.jsonl`: a trap type (the `id`), such as the AEGIS Proximity
+Mine.'''
+
+[structs.ProximityTrap.fields.dbuffs]
+doc = "[`DynamicBuff`] ID to value."
+
+[structs.SystemWideEffect]
+module = "dogma"
+file = "systemWideEffects.jsonl"
+key = "TypeId"
+doc = '''
+`systemWideEffects.jsonl`: an effect type (the `id`) that covers a whole
+system, such as a wormhole effect.'''
+
+[structs.SystemWideEffect.fields.dbuffs]
+doc = "[`DynamicBuff`] ID to value."
+
+[structs.SystemDbuffEmitter]
+module = "dogma"
+file = "systemDbuffEmitters.jsonl"
+key = "TypeId"
+doc = '''
+`systemDbuffEmitters.jsonl`: buffs that a type (the `id`) applies to a
+whole system.'''
+
+[structs.SystemDbuffEmitter.fields.dbuffs]
+doc = "[`DynamicBuff`] ID to value."
+
+[structs.Blueprint]
+module = "industry"
+file = "blueprints.jsonl"
+key = "TypeId"
+doc = "`blueprints.jsonl`"
+
+[structs.Blueprint.fields.activities]
+type = "BlueprintActivities"
+
+[structs.BlueprintActivities]
+module = "industry"
+doc = "What a blueprint can do. An activity it cannot do is `None`."
+
+[structs.BlueprintActivities.fields.manufacturing]
+type = "Activity"
+
+[structs.BlueprintActivities.fields.reaction]
+type = "Activity"
+
+[structs.BlueprintActivities.fields.copying]
+type = "Activity"
+
+[structs.BlueprintActivities.fields.research_material]
+type = "Activity"
+
+[structs.BlueprintActivities.fields.research_time]
+type = "Activity"
+
+[structs.BlueprintActivities.fields.invention]
+type = "Activity"
+
+[structs.Activity]
+module = "industry"
+doc = "Time in seconds, inputs and outputs of one blueprint activity."
+
+[structs.Activity.fields.time]
+default = true
+
+[structs.Activity.fields.materials]
+type = "TypeQuantity"
+
+[structs.Activity.fields.products]
+type = "Product"
+
+[structs.Activity.fields.skills]
+type = "SkillLevel"
+
+[structs.Product]
+module = "industry"
+
+[structs.Product.fields.probability]
+doc = "The chance of success, for invention only."
+
+[structs.IndustryActivity]
+module = "industry"
+file = "industryActivities.jsonl"
+doc = "`industryActivities.jsonl`"
+
+[structs.IndustryAssemblyLine]
+module = "industry"
+file = "industryAssemblyLines.jsonl"
+doc = "`industryAssemblyLines.jsonl`"
+
+[structs.IndustryAssemblyLine.fields.detailsPerGroup]
+type = "GroupMultipliers"
+
+[structs.IndustryAssemblyLine.fields.detailsPerCategory]
+type = "CategoryMultipliers"
+
+[structs.IndustryAssemblyLine.fields.detailsPerTypeList]
+type = "TypeListMultipliers"
+
+[structs.GroupMultipliers]
+module = "industry"
+
+[structs.CategoryMultipliers]
+module = "industry"
+
+[structs.TypeListMultipliers]
+module = "industry"
+
+[structs.IndustryInstallationType]
+module = "industry"
+file = "industryInstallationTypes.jsonl"
+key = "TypeId"
+doc = '''
+`industryInstallationTypes.jsonl`: the assembly lines of a structure type
+(the `id`).'''
+
+[structs.IndustryInstallationType.fields.assemblyLines]
+type = "AssemblyLineRef"
+
+[structs.AssemblyLineRef]
+module = "industry"
+
+[structs.IndustryModifierSource]
+module = "industry"
+file = "industryModifierSources.jsonl"
+key = "TypeId"
+doc = '''
+`industryModifierSources.jsonl`: which attributes of a type (the `id`)
+change industry cost, time or material use.'''
+
+[structs.IndustryModifierSource.fields.manufacturing]
+type = "ModifierSection"
+
+[structs.IndustryModifierSource.fields.reaction]
+type = "ModifierSection"
+
+[structs.IndustryModifierSource.fields.copying]
+type = "ModifierSection"
+
+[structs.IndustryModifierSource.fields.researchMaterial]
+type = "ModifierSection"
+
+[structs.IndustryModifierSource.fields.researchTime]
+type = "ModifierSection"
+
+[structs.IndustryModifierSource.fields.invention]
+type = "ModifierSection"
+
+[structs.ModifierSection]
+module = "industry"
+
+[structs.ModifierSection.fields.cost]
+type = "ModifierAttribute"
+
+[structs.ModifierSection.fields.time]
+type = "ModifierAttribute"
+
+[structs.ModifierSection.fields.material]
+type = "ModifierAttribute"
+
+[structs.ModifierAttribute]
+module = "industry"
+
+[structs.ModifierAttribute.fields.dogmaAttributeID]
+name = "attribute_id"
+
+[structs.IndustryTargetFilter]
+module = "industry"
+file = "industryTargetFilters.jsonl"
+doc = "`industryTargetFilters.jsonl`"
+
+[structs.Region]
+module = "map"
+file = "mapRegions.jsonl"
+table = "regions"
+key = "RegionId"
+doc = "`mapRegions.jsonl`"
+
+[structs.Region.fields.position]
+type = "Position"
+
+[structs.Constellation]
+module = "map"
+file = "mapConstellations.jsonl"
+table = "constellations"
+key = "ConstellationId"
+doc = "`mapConstellations.jsonl`"
+
+[structs.Constellation.fields.position]
+type = "Position"
+
+[structs.SolarSystem]
+module = "map"
+file = "mapSolarSystems.jsonl"
+table = "solar_systems"
+key = "SystemId"
+doc = "`mapSolarSystems.jsonl`. Gate links are in [`Stargate`]."
+
+[structs.SolarSystem.fields.position]
+type = "Position"
+
+[structs.SolarSystem.fields.position2D]
+name = "position_2d"
+type = "Position2D"
+
+[structs.SolarSystem.fields.border]
+default = true
+
+[structs.SolarSystem.fields.corridor]
+default = true
+
+[structs.SolarSystem.fields.fringe]
+default = true
+
+[structs.SolarSystem.fields.hub]
+default = true
+
+[structs.SolarSystem.fields.international]
+default = true
+
+[structs.SolarSystem.fields.regional]
+default = true
+
+[structs.Stargate]
+module = "map"
+file = "mapStargates.jsonl"
+table = "stargates"
+key = "StargateId"
+doc = "`mapStargates.jsonl`. Each gate pair has one record per end."
+
+[structs.Stargate.fields.position]
+type = "Position"
+
+[structs.Stargate.fields.destination]
+type = "GateDestination"
+
+[structs.GateDestination]
+module = "map"
+derive = ["Copy", "Eq"]
+
+[structs.Star]
+module = "map"
+file = "mapStars.jsonl"
+table = "stars"
+key = "CelestialId"
+doc = "`mapStars.jsonl`"
+
+[structs.Star.fields.radius]
+type = "f64"
+
+[structs.Star.fields.statistics]
+type = "StarStatistics"
+
+[structs.StarStatistics]
+module = "map"
+
+[structs.CelestialStatistics]
+module = "map"
+doc = "Physical numbers shared by planets, moons and asteroid belts."
+
+[structs.CelestialAttributes]
+module = "map"
+doc = "Rendering settings of a planet or moon."
+
+[structs.CelestialAttributes.fields.population]
+doc = "Planets only."
+
+[structs.Planet]
+module = "map"
+file = "mapPlanets.jsonl"
+table = "planets"
+key = "CelestialId"
+doc = "`mapPlanets.jsonl`"
+
+[structs.Planet.fields.celestialIndex]
+type = "u32"
+doc = "The planet's number in its system, from 1, as in Jita IV."
+
+[structs.Planet.fields.orbitID]
+doc = "The star this planet orbits."
+
+[structs.Planet.fields.position]
+type = "Position"
+
+[structs.Planet.fields.radius]
+type = "f64"
+
+[structs.Planet.fields.uniqueName]
+doc = "Set only for a few planets with special names."
+
+[structs.Planet.fields.statistics]
+type = "CelestialStatistics"
+
+[structs.Planet.fields.attributes]
+type = "CelestialAttributes"
+
+[structs.Moon]
+module = "map"
+file = "mapMoons.jsonl"
+table = "moons"
+key = "CelestialId"
+doc = "`mapMoons.jsonl`"
+
+[structs.Moon.fields.celestialIndex]
+type = "u32"
+doc = "The number of the planet this moon orbits."
+
+[structs.Moon.fields.orbitIndex]
+type = "u32"
+doc = "The moon's number around that planet, from 1."
+
+[structs.Moon.fields.orbitID]
+doc = "The planet this moon orbits."
+
+[structs.Moon.fields.position]
+type = "Position"
+
+[structs.Moon.fields.uniqueName]
+doc = "Set only for a few moons with special names."
+
+[structs.Moon.fields.statistics]
+type = "CelestialStatistics"
+
+[structs.Moon.fields.attributes]
+type = "CelestialAttributes"
+
+[structs.AsteroidBelt]
+module = "map"
+file = "mapAsteroidBelts.jsonl"
+table = "asteroid_belts"
+key = "CelestialId"
+doc = "`mapAsteroidBelts.jsonl`"
+
+[structs.AsteroidBelt.fields.celestialIndex]
+type = "u32"
+doc = "The number of the planet this belt orbits."
+
+[structs.AsteroidBelt.fields.orbitIndex]
+type = "u32"
+doc = "The belt's number around that planet, from 1."
+
+[structs.AsteroidBelt.fields.orbitID]
+doc = "The planet this belt orbits."
+
+[structs.AsteroidBelt.fields.position]
+type = "Position"
+
+[structs.AsteroidBelt.fields.uniqueName]
+doc = "Set only for a few belts with special names."
+
+[structs.AsteroidBelt.fields.statistics]
+type = "CelestialStatistics"
+
+[structs.SecondarySun]
+module = "map"
+file = "mapSecondarySuns.jsonl"
+table = "secondary_suns"
+key = "CelestialId"
+doc = '''
+`mapSecondarySuns.jsonl`: the second sun, such as a black hole or a
+Wolf-Rayet star, that gives a wormhole system its effect.'''
+
+[structs.SecondarySun.fields.position]
+type = "Position"
+
+[structs.Landmark]
+module = "map"
+file = "landmarks.jsonl"
+doc = "`landmarks.jsonl`: notable places on the map, such as the EVE Gate."
+
+[structs.Landmark.fields.position]
+type = "Position"
+
+[structs.PlanetResource]
+module = "map"
+file = "planetResources.jsonl"
+key = "CelestialId"
+doc = '''
+`planetResources.jsonl`: the power, workforce or reagent that a star or
+planet (the `id`) gives sovereignty upgrades.'''
+
+[structs.PlanetResource.fields.reagent]
+type = "PlanetReagent"
+
+[structs.PlanetReagent]
+module = "map"
+
+[structs.PlanetSchematic]
+module = "map"
+file = "planetSchematics.jsonl"
+doc = "`planetSchematics.jsonl`: planetary industry recipes."
+
+[structs.PlanetSchematic.fields.cycleTime]
+doc = "In seconds."
+
+[structs.PlanetSchematic.fields.pins]
+doc = "Structure types that can run this schematic."
+
+[structs.PlanetSchematic.fields.types]
+type = "SchematicType"
+
+[structs.SchematicType]
+module = "map"
+
+[structs.SchematicType.fields._key]
+name = "type_id"
+type = "TypeId"
+
+[structs.FighterAbility]
+module = "misc"
+file = "fighterAbilities.jsonl"
+doc = "`fighterAbilities.jsonl`"
+
+[structs.FighterAbilitiesByType]
+module = "misc"
+file = "fighterAbilitiesByType.jsonl"
+key = "TypeId"
+doc = "`fighterAbilitiesByType.jsonl`: the abilities of a fighter type (the `id`)."
+
+[structs.FighterAbilitiesByType.fields.abilitySlot0]
+type = "AbilitySlot"
+
+[structs.FighterAbilitiesByType.fields.abilitySlot1]
+type = "AbilitySlot"
+
+[structs.FighterAbilitiesByType.fields.abilitySlot2]
+type = "AbilitySlot"
+
+[structs.AbilitySlot]
+module = "misc"
+
+[structs.AbilitySlot.fields.charges]
+type = "AbilityCharges"
+
+[structs.AbilityCharges]
+module = "misc"
+
+[structs.SovereigntyUpgrade]
+module = "misc"
+file = "sovereigntyUpgrades.jsonl"
+key = "TypeId"
+doc = '''
+`sovereigntyUpgrades.jsonl`: the fuel, power and workforce of a
+sovereignty hub upgrade type (the `id`).'''
+
+[structs.SovereigntyUpgrade.fields.fuel]
+type = "SovereigntyFuel"
+
+[structs.SovereigntyFuel]
+module = "misc"
+
+[structs.MetenoxMoonDrill]
+module = "misc"
+file = "metenoxMoonDrill.jsonl"
+doc = "`metenoxMoonDrill.jsonl`"
+
+[structs.ControlTowerResources]
+module = "misc"
+file = "controlTowerResources.jsonl"
+key = "TypeId"
+doc = '''
+`controlTowerResources.jsonl`: the fuel use of a control tower type (the
+`id`).'''
+
+[structs.ControlTowerResources.fields.resources]
+type = "TowerResource"
+
+[structs.TowerResource]
+module = "misc"
+
+[structs.TowerResource.fields.purpose]
+type = "u32"
+
+[structs.ContrabandType]
+module = "misc"
+file = "contrabandTypes.jsonl"
+key = "TypeId"
+doc = "`contrabandTypes.jsonl`: the factions that ban a type (the `id`)."
+
+[structs.ContrabandType.fields.factions]
+type = "ContrabandFaction"
+
+[structs.ContrabandFaction]
+module = "misc"
+
+[structs.ContrabandFaction.fields._key]
+name = "faction_id"
+type = "FactionId"
+
+[structs.TranslationLanguage]
+module = "misc"
+file = "translationLanguages.jsonl"
+key = "String"
+doc = '''
+`translationLanguages.jsonl`: the name of a language code (the `id`), such
+as `en`.'''
+
+[structs.NpcStation]
+module = "npc"
+file = "npcStations.jsonl"
+key = "StationId"
+doc = '''
+`npcStations.jsonl`. The file has no names;
+[`names::station`](crate::names::station) builds them.'''
+
+[structs.NpcStation.fields.orbitID]
+doc = "The planet, moon or star the station orbits."
+
+[structs.NpcStation.fields.celestialIndex]
+type = "u32"
+doc = '''
+The number of the planet the station orbits, directly or through a
+moon.'''
+
+[structs.NpcStation.fields.orbitIndex]
+type = "u32"
+doc = "The moon's number, if the station orbits a moon."
+
+[structs.NpcStation.fields.position]
+type = "Position"
+
+[structs.NpcStation.fields.reprocessingHangarFlag]
+type = "i32"
+
+[structs.NpcCorporation]
+module = "npc"
+file = "npcCorporations.jsonl"
+key = "CorporationId"
+doc = "`npcCorporations.jsonl`"
+
+[structs.NpcCorporation.fields.allowedMemberRaces]
+type = "u32"
+
+[structs.NpcCorporation.fields.lpOfferTables]
+type = "u32"
+
+[structs.NpcCorporation.fields.corporationTrades]
+key = "TypeId"
+doc = '''
+Type ID to CCP's supply and demand value for it, which can be
+negative.'''
+
+[structs.NpcCorporation.fields.investors]
+key = "CorporationId"
+doc = "Investor corporation ID to its percentage of the shares."
+
+[structs.NpcCorporation.fields.divisions]
+type = "CorporationDivision"
+
+[structs.CorporationDivision]
+module = "npc"
+
+[structs.CorporationDivision.fields._key]
+name = "division_id"
+
+[structs.CorporationDivision.fields.divisionNumber]
+type = "u32"
+
+[structs.NpcCorporationDivision]
+module = "npc"
+file = "npcCorporationDivisions.jsonl"
+doc = "`npcCorporationDivisions.jsonl`"
+
+[structs.NpcCharacter]
+module = "npc"
+file = "npcCharacters.jsonl"
+doc = "`npcCharacters.jsonl`: agents, corporation CEOs and other NPCs."
+
+[structs.NpcCharacter.fields.gender]
+doc = "`true` for male, `false` for female."
+
+[structs.NpcCharacter.fields.skills]
+type = "NpcSkill"
+
+[structs.NpcCharacter.fields.agent]
+type = "Agent"
+
+[structs.NpcSkill]
+module = "npc"
+
+[structs.Agent]
+module = "npc"
+
+[structs.Agent.fields.level]
+type = "u8"
+
+[structs.AgentType]
+module = "npc"
+file = "agentTypes.jsonl"
+doc = "`agentTypes.jsonl`. `name` is CCP's internal name, e.g. `BasicAgent`."
+
+[structs.AgentInSpace]
+module = "npc"
+file = "agentsInSpace.jsonl"
+doc = '''
+`agentsInSpace.jsonl`: agents (the `id`) found in a dungeon in space
+instead of a station.'''
+
+[structs.Faction]
+module = "npc"
+file = "factions.jsonl"
+key = "FactionId"
+doc = "`factions.jsonl`"
+
+[structs.Faction.fields.memberRaces]
+type = "u32"
+
+[structs.StationOperation]
+module = "npc"
+file = "stationOperations.jsonl"
+doc = "`stationOperations.jsonl`: the \"Assembly Plant\" part of a station's name."
+
+[structs.StationOperation.fields.services]
+type = "u32"
+doc = "The [`StationService`] IDs on offer."
+
+[structs.StationOperation.fields.stationTypes]
+type = "TypeId"
+doc = "Race ID to station type ID."
+
+[structs.StationService]
+module = "npc"
+file = "stationServices.jsonl"
+doc = "`stationServices.jsonl`"
+
+[structs.StationStandingsRestriction]
+module = "npc"
+file = "stationStandingsRestrictions.jsonl"
+key = "FactionId"
+doc = '''
+`stationStandingsRestrictions.jsonl`: the standing needed for each station
+service of a faction (the `id`).'''
+
+[structs.StationStandingsRestriction.fields.services]
+doc = "Service ID to minimum standing."
+
+[structs.Type]
+module = "types"
+file = "types.jsonl"
+key = "TypeId"
+doc = "`types.jsonl`: every item, ship, skill, blueprint and so on."
+
+[structs.Type.fields.portionSize]
+type = "u32"
+doc = "How many units one reprocessing batch takes."
+
+[structs.Type.fields.volume]
+doc = "Assembled volume in m³. Packaged volume is `packaged_volume`."
+
+[structs.Type.fields.packagedVolume]
+doc = "Only meaningful when `is_repackable` is set."
+
+[structs.Type.fields.metaGroupID]
+doc = '''
+Meta group, such as Tech I, Tech II, Faction or Officer. Many items,
+including some Tech I modules, leave it unset.'''
+
+[structs.Type.fields.metaLevel]
+type = "u32"
+
+[structs.Type.fields.techLevel]
+type = "u32"
+
+[structs.Type.fields.variationParentTypeID]
+doc = "The basic version of this module, ship or drone."
+
+[structs.Type.fields.isRepackable]
+default = true
+
+[structs.Type.fields.isDynamicType]
+default = true
+doc = '''
+True for mutated items, whose attribute values differ per item. See
+[`DynamicItemAttributes`].'''
+
+[structs.Group]
+module = "types"
+file = "groups.jsonl"
+key = "GroupId"
+doc = "`groups.jsonl`"
+
+[structs.Category]
+module = "types"
+file = "categories.jsonl"
+key = "CategoryId"
+doc = "`categories.jsonl`"
+
+[structs.MarketGroup]
+module = "types"
+file = "marketGroups.jsonl"
+key = "MarketGroupId"
+doc = "`marketGroups.jsonl`: the market's tree of folders."
+
+[structs.MarketGroup.fields.hasTypes]
+doc = "True for the folders that hold items directly."
+
+[structs.MetaGroup]
+module = "types"
+file = "metaGroups.jsonl"
+key = "MetaGroupId"
+doc = "`metaGroups.jsonl`: Tech I, Tech II, Faction, Officer and so on."
+
+[structs.MetaGroup.fields.color]
+type = "Rgb"
+
+[structs.TypeDogma]
+module = "types"
+file = "typeDogma.jsonl"
+key = "TypeId"
+doc = "`typeDogma.jsonl`: the attribute values and effects of a type (the `id`)."
+
+[structs.TypeDogma.fields.dogmaAttributes]
+type = "TypeAttribute"
+
+[structs.TypeDogma.fields.dogmaEffects]
+type = "TypeEffect"
+
+[structs.TypeAttribute]
+module = "types"
+
+[structs.TypeEffect]
+module = "types"
+
+[structs.TypeMaterials]
+module = "types"
+file = "typeMaterials.jsonl"
+key = "TypeId"
+doc = "`typeMaterials.jsonl`: what reprocessing a type (the `id`) gives."
+
+[structs.TypeMaterials.fields.materials]
+type = "Material"
+
+[structs.TypeMaterials.fields.randomizedMaterials]
+type = "RandomMaterial"
+
+[structs.Material]
+module = "types"
+
+[structs.RandomMaterial]
+module = "types"
+
+[structs.TypeBonuses]
+module = "types"
+file = "typeBonus.jsonl"
+table = "type_bonuses"
+key = "TypeId"
+doc = '''
+`typeBonus.jsonl`: the bonus lines that the game shows for a type (the
+`id`), mostly ships, subsystems and structures.'''
+
+[structs.TypeBonuses.fields.roleBonuses]
+type = "Bonus"
+
+[structs.TypeBonuses.fields.types]
+type = "Bonus"
+key = "TypeId"
+doc = "Skill type ID to the bonuses that skill gives."
+
+[structs.TypeBonuses.fields.miscBonuses]
+type = "Bonus"
+
+[structs.Bonus]
+module = "types"
+
+[structs.Bonus.fields.importance]
+type = "i32"
+
+[structs.TypeElement]
+module = "types"
+file = "typeElements.jsonl"
+key = "TypeId"
+doc = '''
+`typeElements.jsonl`: the ship tree tags of a ship type (the `id`), such
+as Small, Support and Shields.'''
+
+[structs.TypeElement.fields.elements]
+type = "u32"
+doc = "Order, from 1, to [`ShipTreeElement`](crate::model::ShipTreeElement) ID."
+
+[structs.TypeList]
+module = "types"
+file = "typeLists.jsonl"
+doc = "`typeLists.jsonl`: named sets of types, groups and categories."
+
+[structs.CompressibleType]
+module = "types"
+file = "compressibleTypes.jsonl"
+key = "TypeId"
+doc = '''
+`compressibleTypes.jsonl`: what a type (the `id`), such as an ore, ice or
+gas, compresses into.'''
+
+[structs.DynamicItemAttributes]
+module = "types"
+file = "dynamicItemAttributes.jsonl"
+key = "TypeId"
+doc = '''
+`dynamicItemAttributes.jsonl`: how a mutaplasmid (the `id`) changes an
+item.'''
+
+[structs.DynamicItemAttributes.fields.attributeIDs]
+name = "attributes"
+type = "DynamicAttribute"
+
+[structs.DynamicItemAttributes.fields.inputOutputMapping]
+type = "DynamicMapping"
+
+[structs.DynamicAttribute]
+module = "types"
+
+[structs.DynamicAttribute.fields._key]
+name = "attribute_id"
+type = "AttributeId"
+
+[structs.DynamicMapping]
+module = "types"
+
+[structs.Mastery]
+module = "types"
+file = "masteries.jsonl"
+key = "TypeId"
+doc = '''
+`masteries.jsonl`: the certificates needed for each mastery level of a
+ship type (the `id`).'''
+
+[structs.Mastery.fields._value]
+name = "levels"
+type = "u32"
+doc = "Mastery level (0–4) to certificate IDs."
+
+[structs.AttributeRef]
+module = "dogma"
+doc = "A dogma attribute, by ID."
+
+[structs.AttributeRef.fields.dogmaAttributeID]
+name = "attribute_id"
+
+[structs.Position]
+module = "map"
+derive = ["Copy"]
+doc = "A point in meters."
+
+[structs.Position2D]
+module = "map"
+derive = ["Copy"]
+doc = "A point on the 2D map."
+
+[structs.Rgb]
+module = "cosmetic"
+derive = ["Copy"]
+doc = "A color, each channel from 0 to 1."
+
+[structs.Rgba]
+module = "cosmetic"
+derive = ["Copy"]
+doc = "A color with alpha, each channel from 0 to 1."
+
+[structs.SkillLevel]
+module = "character"
+doc = "A skill and the level it needs."
+
+[structs.SkillLevel.fields.level]
+type = "u8"
+
+[structs.TypeQuantity]
+module = "industry"
+doc = "A number of items of one type, such as a material or a product."

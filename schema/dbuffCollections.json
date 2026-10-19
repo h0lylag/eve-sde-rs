@@ -1,0 +1,91 @@
+{
+  "file": "dbuffCollections.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "aggregateMode": {
+        "required": true,
+        "type": "string"
+      },
+      "developerDescription": {
+        "required": true,
+        "type": "string"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "itemModifiers": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "dogmaAttributeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "locationGroupModifiers": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "dogmaAttributeID": {
+                "required": true,
+                "type": "integer"
+              },
+              "groupID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "locationModifiers": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "dogmaAttributeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "locationRequiredSkillModifiers": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "dogmaAttributeID": {
+                "required": true,
+                "type": "integer"
+              },
+              "skillID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "operationName": {
+        "required": true,
+        "type": "string"
+      },
+      "showOutputValueInUI": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

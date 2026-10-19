@@ -1,0 +1,142 @@
+{
+  "file": "mapMoons.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "attributes": {
+        "required": true,
+        "type": {
+          "object": {
+            "heightMap1": {
+              "required": true,
+              "type": "integer"
+            },
+            "heightMap2": {
+              "required": true,
+              "type": "integer"
+            },
+            "shaderPreset": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "celestialIndex": {
+        "required": true,
+        "type": "integer"
+      },
+      "npcStationIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "orbitID": {
+        "required": true,
+        "type": "integer"
+      },
+      "orbitIndex": {
+        "required": true,
+        "type": "integer"
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "radius": {
+        "required": true,
+        "type": "float"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "statistics": {
+        "required": false,
+        "type": {
+          "object": {
+            "density": {
+              "required": true,
+              "type": "float"
+            },
+            "eccentricity": {
+              "required": true,
+              "type": "float"
+            },
+            "escapeVelocity": {
+              "required": true,
+              "type": "float"
+            },
+            "locked": {
+              "required": true,
+              "type": "bool"
+            },
+            "massDust": {
+              "required": true,
+              "type": "float"
+            },
+            "massGas": {
+              "required": false,
+              "type": "float"
+            },
+            "orbitPeriod": {
+              "required": true,
+              "type": "float"
+            },
+            "orbitRadius": {
+              "required": true,
+              "type": "float"
+            },
+            "pressure": {
+              "required": true,
+              "type": "float"
+            },
+            "rotationRate": {
+              "required": true,
+              "type": "float"
+            },
+            "spectralClass": {
+              "required": true,
+              "type": "string"
+            },
+            "surfaceGravity": {
+              "required": true,
+              "type": "float"
+            },
+            "temperature": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "uniqueName": {
+        "required": false,
+        "type": "text"
+      }
+    }
+  }
+}

@@ -1,14 +1,24 @@
+//! Downloads from a local HTTP server that behaves like CCP's.
+#![cfg_attr(
+    feature = "download",
+    expect(
+        clippy::unwrap_used,
+        reason = "test helpers fail by panicking, like the tests"
+    )
+)]
 #![cfg(feature = "download")]
 mod common;
 
-use common::{build_line, build_only_zip, stored_zip_bytes};
+use common::{build_line, build_only_zip, file_names};
 use eve_sde::Error;
 use eve_sde::download::{Client, Latest, MAX_DOWNLOAD_BYTES, Update, local_build};
+use eve_sde::model::Type;
+use eve_sde::testing::ArchiveBuilder;
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpListener;
 use std::ops::ControlFlow;
-use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, mpsc};
 use std::thread;
@@ -26,21 +36,21 @@ struct Response {
 }
 
 impl Response {
-    fn ok(body: impl Into<Vec<u8>>) -> Response {
-        Response {
+    fn ok(body: impl Into<Vec<u8>>) -> Self {
+        Self {
             status: 200,
             headers: Vec::new(),
             body: body.into(),
         }
     }
-    fn status(status: u16) -> Response {
-        Response {
+    fn status(status: u16) -> Self {
+        Self {
             status,
             headers: Vec::new(),
             body: Vec::new(),
         }
     }
-    fn header(mut self, name: &str, value: &str) -> Response {
+    fn header(mut self, name: &str, value: &str) -> Self {
         self.headers.push((name.to_owned(), value.to_owned()));
         self
     }
@@ -72,10 +82,10 @@ fn serve(handler: impl Fn(&Request) -> Response + Send + 'static) -> String {
             let mut has_length = false;
             for (k, v) in &response.headers {
                 has_length |= k.eq_ignore_ascii_case("content-length");
-                head.push_str(&format!("{k}: {v}\r\n"));
+                write!(head, "{k}: {v}\r\n").unwrap();
             }
             if !has_length {
-                head.push_str(&format!("Content-Length: {}\r\n", response.body.len()));
+                write!(head, "Content-Length: {}\r\n", response.body.len()).unwrap();
             }
             head.push_str("\r\n");
             let _ = stream.write_all(head.as_bytes());
@@ -96,7 +106,7 @@ fn zip_path(build: u32) -> String {
     format!("/eve-online-static-data-{build}-jsonl.zip")
 }
 
-/// A server that lists `latest` as the latest build, with the ETag `"tag"`,
+/// A server that lists `latest` as the latest build, with the `ETag` `"tag"`,
 /// and serves each ZIP in `zips` at its URL.
 fn release_server(latest: u32, zips: Vec<(u32, Vec<u8>)>) -> String {
     serve(move |req| {
@@ -113,16 +123,6 @@ fn release_server(latest: u32, zips: Vec<(u32, Vec<u8>)>) -> String {
         }
         Response::status(404)
     })
-}
-
-/// The sorted names of the files in `dir`.
-fn only_file(dir: &Path) -> Vec<String> {
-    let mut names: Vec<_> = std::fs::read_dir(dir)
-        .unwrap()
-        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
-        .collect();
-    names.sort();
-    names
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn unsolicited_not_modified_is_an_error() {
         ));
     }
     assert_eq!(std::fs::read(&dest).unwrap(), original);
-    assert_eq!(only_file(dir.path()), ["sde.zip"]);
+    assert_eq!(file_names(dir.path()), ["sde.zip"]);
 }
 
 #[test]
@@ -197,7 +197,7 @@ fn download_replaces_old_file() {
     assert_eq!(info.build_number, 2);
     assert!(calls > 0);
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 2);
-    assert_eq!(only_file(dir.path()), [".sde.zip.lock", "sde.zip"]);
+    assert_eq!(file_names(dir.path()), [".sde.zip.lock", "sde.zip"]);
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn wrong_build_leaves_old_file_alone() {
         }
     ));
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 1);
-    assert_eq!(only_file(dir.path()), ["sde.zip"]);
+    assert_eq!(file_names(dir.path()), ["sde.zip"]);
 }
 
 #[test]
@@ -226,10 +226,10 @@ fn corrupt_download_leaves_old_file_alone() {
     let dir = tempfile::tempdir().unwrap();
     let dest = dir.path().join("sde.zip");
     std::fs::write(&dest, build_only_zip(1)).unwrap();
-    let mut broken = stored_zip_bytes(&[
-        ("_sde.jsonl", &build_line(2)),
-        ("types.jsonl", "x".repeat(5000).as_str()),
-    ]);
+    let mut broken = ArchiveBuilder::new(2)
+        .rows::<Type>("x".repeat(5000))
+        .stored()
+        .into_bytes();
     // Damage the stored data of the second file, keeping the directory intact.
     let at = broken.windows(5).rposition(|w| w == b"xxxxx").unwrap();
     broken[at] = b'y';
@@ -243,7 +243,7 @@ fn corrupt_download_leaves_old_file_alone() {
         "{err:?}"
     );
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 1);
-    assert_eq!(only_file(dir.path()), ["sde.zip"]);
+    assert_eq!(file_names(dir.path()), ["sde.zip"]);
 }
 
 #[test]
@@ -258,7 +258,7 @@ fn cancelling_leaves_old_file_alone() {
         .unwrap_err();
     assert!(matches!(err, Error::Cancelled));
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 1);
-    assert_eq!(only_file(dir.path()), ["sde.zip"]);
+    assert_eq!(file_names(dir.path()), ["sde.zip"]);
 }
 
 #[test]
@@ -291,7 +291,7 @@ fn overlapping_downloads_do_not_share_temporary_files() {
         assert_eq!(second.unwrap().build_number, 2);
     });
     assert_eq!(local_build(&dest).unwrap().unwrap().build_number, 2);
-    assert_eq!(only_file(dir.path()), [".sde.zip.lock", "sde.zip"]);
+    assert_eq!(file_names(dir.path()), [".sde.zip.lock", "sde.zip"]);
 }
 
 #[test]
@@ -307,7 +307,7 @@ fn oversized_download_is_refused() {
             if resource == "download" && *limit == MAX_DOWNLOAD_BYTES),
         "{err}"
     );
-    assert!(only_file(dir.path()).is_empty());
+    assert_eq!(file_names(dir.path()), [] as [std::string::String; 0]);
 }
 
 #[test]
@@ -323,7 +323,10 @@ fn missing_folder_error_names_the_file() {
     };
     assert_eq!(io.kind(), std::io::ErrorKind::NotFound);
     let message = err.to_string();
-    assert!(message.starts_with("cannot create `"), "{message}");
+    assert!(
+        message.starts_with("cannot create a temporary file in `"),
+        "{message}"
+    );
     assert!(message.contains("missing"), "{message}");
     assert!(std::error::Error::source(&err).is_some());
 }
@@ -360,7 +363,7 @@ fn missing_build_is_an_error() {
         err,
         Error::HttpStatus { url, status: 404 } if url == format!("{base}{}", zip_path(2))
     ));
-    assert!(only_file(dir.path()).is_empty());
+    assert_eq!(file_names(dir.path()), [] as [std::string::String; 0]);
 }
 
 #[test]
@@ -455,7 +458,7 @@ fn overlapping_updates_recheck_the_build_before_replacement() {
             local_build(&dest).unwrap().unwrap().build_number,
             slow_build.max(fast_build)
         );
-        assert_eq!(only_file(dir.path()), [".sde.zip.lock", "sde.zip"]);
+        assert_eq!(file_names(dir.path()), [".sde.zip.lock", "sde.zip"]);
     }
 }
 
@@ -480,24 +483,53 @@ fn oversized_metadata_preserves_the_existing_archive() {
     let text = format!(
         "{}{}",
         build_line(2),
-        " ".repeat(eve_sde::MAX_METADATA_BYTES as usize)
+        " ".repeat(usize::try_from(eve_sde::MAX_METADATA_BYTES).unwrap())
     );
-    let mut bytes = common::zip_bytes(&[("_sde.jsonl", &text)]);
-    common::understate_sizes(&mut bytes);
+    let bytes = common::zip_bytes(&[("_sde.jsonl", &text)]);
     let client = client(&release_server(2, vec![(2, bytes)]));
     let err = client
         .download(2, &dest, |_, _| ControlFlow::Continue(()))
         .unwrap_err();
     assert!(matches!(err, Error::LimitExceeded { resource, .. } if resource == "build metadata"));
     assert_eq!(std::fs::read(&dest).unwrap(), original);
-    assert_eq!(only_file(dir.path()), ["sde.zip"]);
+    assert_eq!(file_names(dir.path()), ["sde.zip"]);
 }
 
 #[test]
 fn latest_rejects_oversized_metadata() {
-    let base = serve(|_| Response::ok(" ".repeat(eve_sde::MAX_METADATA_BYTES as usize + 1)));
+    let limit = usize::try_from(eve_sde::MAX_METADATA_BYTES).unwrap();
+    let base = serve(move |_| Response::ok(" ".repeat(limit + 1)));
     assert!(matches!(
         client(&base).latest(None),
         Err(Error::LimitExceeded { .. })
     ));
+}
+
+#[cfg(feature = "sqlite")]
+#[test]
+fn sqlite_update_downloads_then_imports_the_latest_build() {
+    use eve_sde::ids::TypeId;
+    use eve_sde::sqlite::{self, ImportOutcome, Store};
+
+    let rifter =
+        r#"{"_key":587,"groupID":25,"name":{"en":"Rifter"},"portionSize":1,"published":true}"#;
+    let zip = ArchiveBuilder::new(7).rows::<Type>(rifter).into_bytes();
+    let client = client(&release_server(7, vec![(7, zip)]));
+    let dir = tempfile::tempdir().unwrap();
+    let store_dir = dir.path().join("sde");
+    assert_eq!(
+        sqlite::update(&client, &store_dir).unwrap(),
+        ImportOutcome::Imported
+    );
+    assert_eq!(
+        sqlite::update(&client, &store_dir).unwrap(),
+        ImportOutcome::UpToDate
+    );
+    assert!(store_dir.join(sqlite::ZIP_FILE).exists());
+    let store = Store::open(&store_dir).unwrap();
+    assert_eq!(store.build().build_number, 7);
+    assert_eq!(
+        store.get::<Type>(TypeId(587)).unwrap().unwrap().name,
+        "Rifter"
+    );
 }

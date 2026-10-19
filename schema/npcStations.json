@@ -1,0 +1,74 @@
+{
+  "file": "npcStations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "celestialIndex": {
+        "required": false,
+        "type": "integer"
+      },
+      "operationID": {
+        "required": true,
+        "type": "integer"
+      },
+      "orbitID": {
+        "required": true,
+        "type": "integer"
+      },
+      "orbitIndex": {
+        "required": false,
+        "type": "integer"
+      },
+      "ownerID": {
+        "required": true,
+        "type": "integer"
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "reprocessingEfficiency": {
+        "required": true,
+        "type": "float"
+      },
+      "reprocessingHangarFlag": {
+        "required": true,
+        "type": "integer"
+      },
+      "reprocessingStationsTake": {
+        "required": true,
+        "type": "float"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "useOperationName": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

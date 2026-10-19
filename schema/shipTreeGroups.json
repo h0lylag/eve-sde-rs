@@ -1,0 +1,86 @@
+{
+  "file": "shipTreeGroups.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "elements": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "icon": {
+        "required": true,
+        "type": "string"
+      },
+      "iconLarge": {
+        "required": true,
+        "type": "string"
+      },
+      "iconSmall": {
+        "required": true,
+        "type": "string"
+      },
+      "iconSmallNPC": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "preReqSkills": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "skills": {
+                "required": true,
+                "type": {
+                  "array": {
+                    "object": {
+                      "_key": {
+                        "required": true,
+                        "type": "integer"
+                      },
+                      "display": {
+                        "required": true,
+                        "type": "bool"
+                      },
+                      "level": {
+                        "required": true,
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

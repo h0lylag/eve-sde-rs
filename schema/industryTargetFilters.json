@@ -1,0 +1,27 @@
+{
+  "file": "industryTargetFilters.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "categoryIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "groupIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

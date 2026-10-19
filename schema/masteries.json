@@ -1,0 +1,30 @@
+{
+  "file": "masteries.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "_value": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": {
+                  "array": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

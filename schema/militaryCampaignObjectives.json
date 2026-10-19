@@ -1,0 +1,214 @@
+{
+  "file": "militaryCampaignObjectives.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "string"
+      },
+      "annotations": {
+        "required": false,
+        "type": {
+          "object": {
+            "requiredEnlistmentWithFactionID": {
+              "required": true,
+              "type": "integer"
+            },
+            "restrictionTooltip": {
+              "required": true,
+              "type": "text"
+            },
+            "warning1": {
+              "required": true,
+              "type": "text"
+            },
+            "warning2": {
+              "required": false,
+              "type": "text"
+            }
+          }
+        }
+      },
+      "campaignID": {
+        "required": true,
+        "type": "string"
+      },
+      "careerPath": {
+        "required": true,
+        "type": "string"
+      },
+      "contentTags": {
+        "required": true,
+        "type": {
+          "array": "string"
+        }
+      },
+      "contributionMethodConfiguration": {
+        "required": true,
+        "type": {
+          "object": {
+            "name": {
+              "required": true,
+              "type": "string"
+            },
+            "parameters": {
+              "required": true,
+              "type": {
+                "array": {
+                  "object": {
+                    "key": {
+                      "required": true,
+                      "type": "string"
+                    },
+                    "matcher": {
+                      "required": true,
+                      "type": {
+                        "object": {
+                          "values": {
+                            "required": true,
+                            "type": {
+                              "array": {
+                                "object": {
+                                  "valueType": {
+                                    "required": true,
+                                    "type": "string"
+                                  },
+                                  "values": {
+                                    "required": false,
+                                    "type": {
+                                      "array": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "issuer": {
+        "required": true,
+        "type": {
+          "object": {
+            "corporationID": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "maxProgressPerParticipant": {
+        "required": true,
+        "type": "integer"
+      },
+      "presentingCharacterID": {
+        "required": true,
+        "type": "integer"
+      },
+      "rewards": {
+        "required": true,
+        "type": {
+          "object": {
+            "isk": {
+              "required": true,
+              "type": {
+                "object": {
+                  "amountPerInterval": {
+                    "required": true,
+                    "type": "integer"
+                  },
+                  "issuer": {
+                    "required": true,
+                    "type": {
+                      "object": {
+                        "corporationID": {
+                          "required": true,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "progressInterval": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "lp": {
+              "required": true,
+              "type": {
+                "object": {
+                  "amountPerInterval": {
+                    "required": true,
+                    "type": "integer"
+                  },
+                  "issuer": {
+                    "required": true,
+                    "type": {
+                      "object": {
+                        "corporationID": {
+                          "required": true,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "progressInterval": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "standing": {
+              "required": true,
+              "type": {
+                "object": {
+                  "gainPercentPerInterval": {
+                    "required": true,
+                    "type": "float"
+                  },
+                  "issuer": {
+                    "required": true,
+                    "type": {
+                      "object": {
+                        "factionID": {
+                          "required": true,
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "progressInterval": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "subtitle": {
+        "required": true,
+        "type": "text"
+      },
+      "targetProgress": {
+        "required": true,
+        "type": "integer"
+      },
+      "title": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

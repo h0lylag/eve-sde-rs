@@ -1,3 +1,7 @@
 /target/
 *.zip
 .*.zip.lock
+.docs/
+AGENTS.md
+.*.part-*
+*.sqlite

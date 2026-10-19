@@ -1,0 +1,50 @@
+{
+  "file": "mapStars.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "radius": {
+        "required": true,
+        "type": "integer"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "statistics": {
+        "required": true,
+        "type": {
+          "object": {
+            "age": {
+              "required": true,
+              "type": "float"
+            },
+            "life": {
+              "required": true,
+              "type": "float"
+            },
+            "luminosity": {
+              "required": true,
+              "type": "float"
+            },
+            "spectralClass": {
+              "required": true,
+              "type": "string"
+            },
+            "temperature": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

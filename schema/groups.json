@@ -1,0 +1,43 @@
+{
+  "file": "groups.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "anchorable": {
+        "required": true,
+        "type": "bool"
+      },
+      "anchored": {
+        "required": true,
+        "type": "bool"
+      },
+      "categoryID": {
+        "required": true,
+        "type": "integer"
+      },
+      "fittableNonSingleton": {
+        "required": true,
+        "type": "bool"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "published": {
+        "required": true,
+        "type": "bool"
+      },
+      "useBasePrice": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

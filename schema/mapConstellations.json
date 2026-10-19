@@ -1,0 +1,52 @@
+{
+  "file": "mapConstellations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "regionID": {
+        "required": true,
+        "type": "integer"
+      },
+      "solarSystemIDs": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "wormholeClassID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "file": "proximityTrap.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffDuration": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffs": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "forceDecloakDuration": {
+        "required": false,
+        "type": "integer"
+      },
+      "resetDelay": {
+        "required": false,
+        "type": "integer"
+      },
+      "showPerimeterLights": {
+        "required": true,
+        "type": "bool"
+      },
+      "triggerDelay": {
+        "required": true,
+        "type": "integer"
+      },
+      "triggerFilterTypeListID": {
+        "required": true,
+        "type": "integer"
+      },
+      "triggerRange": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

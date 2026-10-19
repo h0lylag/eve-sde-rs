@@ -1,0 +1,79 @@
+{
+  "file": "skinrComponents.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "associatedTypeIds": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "licenseUsesGranted": {
+                "required": true,
+                "type": "integer"
+              },
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "category": {
+        "required": true,
+        "type": "integer"
+      },
+      "finish": {
+        "required": true,
+        "type": "string"
+      },
+      "iconFile": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "projectionTypeU": {
+        "required": true,
+        "type": "string"
+      },
+      "projectionTypeV": {
+        "required": true,
+        "type": "string"
+      },
+      "published": {
+        "required": true,
+        "type": "bool"
+      },
+      "rarity": {
+        "required": true,
+        "type": "integer"
+      },
+      "resourceFile": {
+        "required": true,
+        "type": "string"
+      },
+      "sequenceBinder": {
+        "required": true,
+        "type": {
+          "object": {
+            "count": {
+              "required": true,
+              "type": "integer"
+            },
+            "itemTypeID": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

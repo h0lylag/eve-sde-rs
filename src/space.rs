@@ -1,8 +1,6 @@
-//! Solar systems, security status and gate links.
+//! What sort of space a solar system is in, and its security.
 
-use crate::Sde;
-use crate::ids::SystemId;
-use crate::model::{SolarSystem, Stargate};
+use crate::model::SolarSystem;
 
 /// What sort of space a system is in, from its ID range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -13,6 +11,7 @@ pub enum SpaceKind {
     KnownSpace,
     /// Wormhole space, including Thera.
     Wormhole,
+    /// Abyssal deadspace.
     Abyssal,
     /// Systems in any other ID range, such as the empty systems of the VR
     /// regions.
@@ -33,8 +32,9 @@ pub enum SecurityBand {
 
 impl SolarSystem {
     /// What sort of space this system is in, from its ID.
+    #[must_use]
     pub fn space(&self) -> SpaceKind {
-        match self.id {
+        match self.id.0 {
             30_000_000..=30_999_999 => SpaceKind::KnownSpace,
             31_000_000..=31_999_999 => SpaceKind::Wormhole,
             32_000_000..=32_999_999 => SpaceKind::Abyssal,
@@ -44,6 +44,7 @@ impl SolarSystem {
 
     /// The security status, rounded the way the game shows it. Anything above
     /// zero but below 0.05 shows as 0.1.
+    #[must_use]
     pub fn security_rounded(&self) -> f64 {
         let s = self.security_status;
         if s <= 0.0 || s >= 0.05 {
@@ -55,12 +56,14 @@ impl SolarSystem {
     }
 
     /// The security status as shown in game, e.g. `0.9` or `-0.3`.
+    #[must_use]
     pub fn security_display(&self) -> String {
         format!("{:.1}", self.security_rounded())
     }
 
     /// The security band: high from 0.45 (shown as 0.5), low above 0.0, null
     /// otherwise.
+    #[must_use]
     pub fn security_band(&self) -> SecurityBand {
         if self.security_status >= 0.45 {
             SecurityBand::High
@@ -69,25 +72,5 @@ impl SolarSystem {
         } else {
             SecurityBand::Null
         }
-    }
-}
-
-impl Sde {
-    /// Systems one stargate away, ascending. Empty for a system without
-    /// stargates, such as a wormhole system.
-    pub fn neighbors(&self, system_id: SystemId) -> &[SystemId] {
-        self.index
-            .neighbors
-            .get(&system_id)
-            .map_or(&[], Vec::as_slice)
-    }
-
-    /// The stargates in a system.
-    pub fn gates(&self, system_id: SystemId) -> impl Iterator<Item = &Stargate> {
-        self.solar_systems
-            .get(&system_id)
-            .into_iter()
-            .flat_map(|s| s.stargate_ids.iter())
-            .filter_map(|id| self.stargates.get(id))
     }
 }

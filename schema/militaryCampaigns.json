@@ -1,0 +1,217 @@
+{
+  "file": "militaryCampaigns.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "string"
+      },
+      "annotations": {
+        "required": true,
+        "type": {
+          "object": {
+            "aoCampaignCardButtonImage": {
+              "required": true,
+              "type": "string"
+            },
+            "backgroundVideoLoop": {
+              "required": true,
+              "type": "string"
+            },
+            "briefingBackground": {
+              "required": true,
+              "type": "string"
+            },
+            "briefingFailureDescription": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingFailureHeader": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingFinalWords": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingForeground": {
+              "required": true,
+              "type": "string"
+            },
+            "briefingGoalDescription": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingHeader": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingMiddleground": {
+              "required": true,
+              "type": "string"
+            },
+            "briefingSuccessDescription": {
+              "required": true,
+              "type": "text"
+            },
+            "briefingSuccessHeader": {
+              "required": true,
+              "type": "text"
+            },
+            "campaignSet": {
+              "required": true,
+              "type": "string"
+            },
+            "dashboardAmbientBackground": {
+              "required": true,
+              "type": "string"
+            },
+            "dashboardBackground": {
+              "required": true,
+              "type": "string"
+            },
+            "dashboardForeground": {
+              "required": true,
+              "type": "string"
+            },
+            "dashboardMiddleground": {
+              "required": true,
+              "type": "string"
+            },
+            "finishedCampaignEnded": {
+              "required": true,
+              "type": "text"
+            },
+            "finishedFailureDescription": {
+              "required": true,
+              "type": "text"
+            },
+            "finishedResolutionStateFailure": {
+              "required": true,
+              "type": "text"
+            },
+            "finishedResolutionStateSuccess": {
+              "required": true,
+              "type": "text"
+            },
+            "finishedSuccessDescription": {
+              "required": true,
+              "type": "text"
+            },
+            "foregroundVideoIntro": {
+              "required": true,
+              "type": "string"
+            },
+            "foregroundVideoLoop": {
+              "required": true,
+              "type": "string"
+            },
+            "foregroundVideoOutro": {
+              "required": true,
+              "type": "string"
+            },
+            "mapFocusEntityID": {
+              "required": true,
+              "type": "integer"
+            },
+            "mapHeader": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection1Paragraph": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection1Title": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection2Paragraph": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection2Title": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection3Paragraph": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSection3Title": {
+              "required": true,
+              "type": "text"
+            },
+            "mapSubheader": {
+              "required": true,
+              "type": "text"
+            },
+            "mapTitle": {
+              "required": true,
+              "type": "text"
+            },
+            "middlegroundVideoIntro": {
+              "required": true,
+              "type": "string"
+            },
+            "middlegroundVideoLoop": {
+              "required": true,
+              "type": "string"
+            },
+            "middlegroundVideoOutro": {
+              "required": true,
+              "type": "string"
+            },
+            "presentingCharacterName": {
+              "required": true,
+              "type": "text"
+            },
+            "presentingCharacterSubtitle": {
+              "required": true,
+              "type": "text"
+            },
+            "presentingCharacterTexturePath": {
+              "required": true,
+              "type": "string"
+            },
+            "race": {
+              "required": true,
+              "type": "string"
+            },
+            "themePack": {
+              "required": true,
+              "type": "string"
+            },
+            "towCampaignCardButtonImage": {
+              "required": true,
+              "type": "string"
+            }
+          }
+        }
+      },
+      "issuer": {
+        "required": true,
+        "type": {
+          "object": {
+            "factionID": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "subtitle": {
+        "required": true,
+        "type": "text"
+      },
+      "targetProgress": {
+        "required": true,
+        "type": "integer"
+      },
+      "title": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

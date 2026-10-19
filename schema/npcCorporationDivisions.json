@@ -1,0 +1,31 @@
+{
+  "file": "npcCorporationDivisions.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "displayName": {
+        "required": false,
+        "type": "string"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      },
+      "leaderTypeName": {
+        "required": true,
+        "type": "text"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "file": "marketGroups.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "hasTypes": {
+        "required": true,
+        "type": "bool"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "parentGroupID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

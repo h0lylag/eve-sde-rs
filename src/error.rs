@@ -2,11 +2,15 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::io;
 use std::path::Path;
+#[cfg(feature = "sqlite")]
+use std::path::PathBuf;
 
-/// Everything that can go wrong while loading or downloading the SDE.
+/// Everything that can go wrong while reading, downloading or storing the
+/// SDE.
 ///
-/// Errors from the ZIP and HTTP libraries are boxed, so upgrading those
-/// libraries does not change this type. Downcast the box to reach them.
+/// Errors from the ZIP, JSON, HTTP and SQLite libraries are boxed, so
+/// upgrading those libraries does not change this type. Downcast the box to
+/// reach them.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
@@ -18,36 +22,92 @@ pub enum Error {
     Zip(Box<dyn StdError + Send + Sync>),
     /// The archive has no file with this name. Did CCP change the format?
     MissingFile(String),
-    /// A file in the archive could not be read. `source` says why, e.g.
-    /// `Invalid checksum` when the file is damaged.
-    Read { file: String, source: io::Error },
-    /// A line of a file in the archive failed to parse. `line` counts from 1.
-    Parse {
+    /// A file in the archive could not be read.
+    Read {
+        /// The file inside the archive.
         file: String,
+        /// Why, e.g. `Invalid checksum` when the file is damaged.
+        source: io::Error,
+    },
+    /// A line of a file in the archive failed to parse.
+    Parse {
+        /// The file inside the archive.
+        file: String,
+        /// The line, counting from 1.
         line: usize,
-        source: serde_json::Error,
+        /// Why. It downcasts to `serde_json::Error`.
+        source: Box<dyn StdError + Send + Sync>,
     },
     /// Two records in one file of the archive share a key.
-    DuplicateKey { file: String, key: String },
-    /// The archive or a server response is not in the expected format.
+    DuplicateKey {
+        /// The file inside the archive.
+        file: String,
+        /// The repeated key.
+        key: String,
+    },
+    /// The archive, a SQLite store or a server response is not in the
+    /// expected format.
     Invalid(String),
     /// Build metadata, a record, the decompressed archive or a download is
-    /// bigger than its limit. `resource` says which, e.g. `download`, and
-    /// `limit` is the limit in bytes.
-    LimitExceeded { resource: String, limit: u64 },
+    /// bigger than its limit.
+    LimitExceeded {
+        /// What was too big, e.g. `download`.
+        resource: String,
+        /// The limit in bytes.
+        limit: u64,
+    },
     /// The request failed before a response arrived, e.g. because of DNS, TLS
     /// or a timeout.
     #[cfg(feature = "download")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
     Http(Box<dyn StdError + Send + Sync>),
     /// The server answered with a status other than the one expected.
     #[cfg(feature = "download")]
-    HttpStatus { url: String, status: u16 },
+    #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
+    HttpStatus {
+        /// The URL that was requested.
+        url: String,
+        /// The HTTP status code.
+        status: u16,
+    },
     /// A downloaded archive holds another build than the one requested.
     #[cfg(feature = "download")]
-    BuildMismatch { expected: u32, got: u32 },
+    #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
+    BuildMismatch {
+        /// The build that was requested.
+        expected: u32,
+        /// The build the archive holds.
+        got: u32,
+    },
     /// The progress callback asked to stop.
     #[cfg(feature = "download")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "download")))]
     Cancelled,
+    /// The SQLite store could not be read or written. It downcasts to
+    /// `rusqlite::Error`.
+    #[cfg(feature = "sqlite")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    Sqlite(Box<dyn StdError + Send + Sync>),
+    /// The folder holds no SQLite store of this version's layout. Fill it
+    /// with [`sqlite::import`](crate::sqlite::import).
+    #[cfg(feature = "sqlite")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    NoStore {
+        /// The folder.
+        dir: PathBuf,
+    },
+    /// A record in the SQLite store does not fit its model. Did CCP change
+    /// the format?
+    #[cfg(feature = "sqlite")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    Decode {
+        /// The table.
+        table: String,
+        /// The record's key.
+        key: String,
+        /// Why. It downcasts to `serde_json::Error`.
+        source: Box<dyn StdError + Send + Sync>,
+    },
 }
 
 /// `Result` with this crate's [`Error`] as the default error type.
@@ -55,19 +115,32 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 impl Error {
     pub(crate) fn zip(e: zip::result::ZipError) -> Self {
-        Error::Zip(Box::new(e))
+        Self::Zip(Box::new(e))
     }
 
     pub(crate) fn read(file: &str, source: io::Error) -> Self {
-        Error::Read {
+        Self::Read {
             file: file.to_owned(),
             source,
         }
     }
 
+    pub(crate) fn parse(file: &str, line: usize, source: serde_json::Error) -> Self {
+        Self::Parse {
+            file: file.to_owned(),
+            line,
+            source: Box::new(source),
+        }
+    }
+
     #[cfg(feature = "download")]
     pub(crate) fn http(e: ureq::Error) -> Self {
-        Error::Http(Box::new(e))
+        Self::Http(Box::new(e))
+    }
+
+    #[cfg(feature = "sqlite")]
+    pub(crate) fn sqlite(e: rusqlite::Error) -> Self {
+        Self::Sqlite(Box::new(e))
     }
 }
 
@@ -77,31 +150,39 @@ impl Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Io(e) => e.fmt(f),
-            Error::Zip(e) => e.fmt(f),
-            Error::MissingFile(name) => write!(f, "archive has no file `{name}`"),
-            Error::Read { file, .. } => write!(f, "cannot read `{file}`"),
-            Error::Parse { file, line, .. } => write!(f, "cannot parse `{file}` line {line}"),
-            Error::DuplicateKey { file, key } => {
+            Self::Io(e) => e.fmt(f),
+            Self::Zip(e) => e.fmt(f),
+            Self::MissingFile(name) => write!(f, "archive has no file `{name}`"),
+            Self::Read { file, .. } => write!(f, "cannot read `{file}`"),
+            Self::Parse { file, line, .. } => write!(f, "cannot parse `{file}` line {line}"),
+            Self::DuplicateKey { file, key } => {
                 write!(f, "`{file}` has more than one record with key {key}")
             }
-            Error::Invalid(msg) => f.write_str(msg),
-            Error::LimitExceeded { resource, limit } => {
+            Self::Invalid(msg) => f.write_str(msg),
+            Self::LimitExceeded { resource, limit } => {
                 write!(f, "{resource} exceeds the limit of {limit} bytes")
             }
             #[cfg(feature = "download")]
-            Error::Http(e) => e.fmt(f),
+            Self::Http(e) => e.fmt(f),
             #[cfg(feature = "download")]
-            Error::HttpStatus { url, status } => write!(f, "{url} returned HTTP {status}"),
+            Self::HttpStatus { url, status } => write!(f, "{url} returned HTTP {status}"),
             #[cfg(feature = "download")]
-            Error::BuildMismatch { expected, got } => {
+            Self::BuildMismatch { expected, got } => {
                 write!(
                     f,
                     "expected SDE build {expected} but the archive is build {got}"
                 )
             }
             #[cfg(feature = "download")]
-            Error::Cancelled => f.write_str("download cancelled"),
+            Self::Cancelled => f.write_str("download cancelled"),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(e) => e.fmt(f),
+            #[cfg(feature = "sqlite")]
+            Self::NoStore { dir } => write!(f, "no SDE store in `{}`", dir.display()),
+            #[cfg(feature = "sqlite")]
+            Self::Decode { table, key, .. } => {
+                write!(f, "cannot parse record {key} of table `{table}`")
+            }
         }
     }
 }
@@ -109,20 +190,18 @@ impl fmt::Display for Error {
 impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
-            Error::Io(e) => e.source(),
-            Error::Zip(e) => e.source(),
-            Error::Read { source, .. } => Some(source),
-            Error::Parse { source, .. } => Some(source),
+            Self::Io(e) => e.source(),
+            Self::Zip(e) => e.source(),
+            Self::Read { source, .. } => Some(source),
+            Self::Parse { source, .. } => Some(source.as_ref()),
             #[cfg(feature = "download")]
-            Error::Http(e) => e.source(),
+            Self::Http(e) => e.source(),
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(e) => e.source(),
+            #[cfg(feature = "sqlite")]
+            Self::Decode { source, .. } => Some(source.as_ref()),
             _ => None,
         }
-    }
-}
-
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Self {
-        Error::Io(e)
     }
 }
 
@@ -133,15 +212,21 @@ pub(crate) fn io_context(source: io::Error, context: String) -> io::Error {
     io::Error::new(source.kind(), IoContext { context, source })
 }
 
-/// Names the file in a failed I/O result's error, using [`io_context`].
+/// Names the file in a failed I/O result's error, using [`io_context`], and
+/// turns it into [`Error::Io`].
 pub(crate) trait PathContext<T> {
     /// `action` completes "cannot …", e.g. `open` or `write`.
-    fn path_context(self, action: &str, path: &Path) -> io::Result<T>;
+    fn path_context(self, action: &str, path: &Path) -> Result<T>;
 }
 
 impl<T> PathContext<T> for io::Result<T> {
-    fn path_context(self, action: &str, path: &Path) -> io::Result<T> {
-        self.map_err(|e| io_context(e, format!("cannot {action} `{}`", path.display())))
+    fn path_context(self, action: &str, path: &Path) -> Result<T> {
+        self.map_err(|e| {
+            Error::Io(io_context(
+                e,
+                format!("cannot {action} `{}`", path.display()),
+            ))
+        })
     }
 }
 

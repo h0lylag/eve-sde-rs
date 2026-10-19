@@ -1,0 +1,27 @@
+{
+  "file": "skinLicenses.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "duration": {
+        "required": true,
+        "type": "integer"
+      },
+      "isSingleUse": {
+        "required": false,
+        "type": "bool"
+      },
+      "licenseTypeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "skinID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

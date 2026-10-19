@@ -1,0 +1,25 @@
+{
+  "file": "skinrSlots.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "allowedDesignComponentCategories": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "category": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "file": "metenoxMoonDrill.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "miningCycleTime": {
+        "required": true,
+        "type": "integer"
+      },
+      "miningEfficiency": {
+        "required": true,
+        "type": "float"
+      },
+      "reagentsConsumedPerCycle": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "file": "typeBonus.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "miscBonuses": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "bonus": {
+                "required": false,
+                "type": "float"
+              },
+              "bonusText": {
+                "required": true,
+                "type": "text"
+              },
+              "importance": {
+                "required": true,
+                "type": "integer"
+              },
+              "isPositive": {
+                "required": false,
+                "type": "bool"
+              },
+              "unitID": {
+                "required": false,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "roleBonuses": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "bonus": {
+                "required": false,
+                "type": "float"
+              },
+              "bonusText": {
+                "required": true,
+                "type": "text"
+              },
+              "importance": {
+                "required": true,
+                "type": "integer"
+              },
+              "unitID": {
+                "required": false,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "types": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": {
+                  "array": {
+                    "object": {
+                      "bonus": {
+                        "required": false,
+                        "type": "float"
+                      },
+                      "bonusText": {
+                        "required": true,
+                        "type": "text"
+                      },
+                      "importance": {
+                        "required": true,
+                        "type": "integer"
+                      },
+                      "unitID": {
+                        "required": false,
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

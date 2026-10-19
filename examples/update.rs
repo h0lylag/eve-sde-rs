@@ -3,20 +3,28 @@
 //! `cargo run --release --features download --example update -- sde.zip`
 
 use eve_sde::download::{Client, Update};
+use std::process::ExitCode;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> ExitCode {
     let Some(path) = std::env::args().nth(1) else {
         eprintln!("usage: update <sde.zip>");
-        std::process::exit(2);
+        return ExitCode::from(2);
     };
-    let client = Client::new("eve-sde-example/0.1");
-    match client.update(&path)? {
-        Update::UpToDate(build) => println!("{path} is up to date (build {build})"),
-        Update::Updated { from, to } => match from {
-            Some(from) => println!("updated {path}: build {from} -> {to}"),
-            None => println!("downloaded build {to} to {path}"),
-        },
-        other => println!("{path}: {other:?}"),
+    let client = Client::new("eve-sde-example/0.2");
+    match client.update(&path) {
+        Ok(Update::UpToDate(build)) => println!("{path} is up to date (build {build})"),
+        Ok(Update::Updated {
+            from: Some(from),
+            to,
+        }) => {
+            println!("updated {path}: build {from} -> {to}");
+        }
+        Ok(Update::Updated { from: None, to }) => println!("downloaded build {to} to {path}"),
+        Ok(other) => println!("{path}: {other:?}"),
+        Err(error) => {
+            eprintln!("error: {error}");
+            return ExitCode::FAILURE;
+        }
     }
-    Ok(())
+    ExitCode::SUCCESS
 }

@@ -1,0 +1,37 @@
+{
+  "file": "dungeons.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "allowedShipsList": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "archetypeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "gameplayDescription": {
+        "required": false,
+        "type": "text"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

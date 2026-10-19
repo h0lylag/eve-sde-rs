@@ -1,0 +1,31 @@
+{
+  "file": "corporationRoleGroups.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "appliesTo": {
+        "required": true,
+        "type": "string"
+      },
+      "appliesToGrantable": {
+        "required": true,
+        "type": "string"
+      },
+      "isDivisional": {
+        "required": true,
+        "type": "bool"
+      },
+      "isLocational": {
+        "required": true,
+        "type": "bool"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

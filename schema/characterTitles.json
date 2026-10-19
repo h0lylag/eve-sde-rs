@@ -1,0 +1,15 @@
+{
+  "file": "characterTitles.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

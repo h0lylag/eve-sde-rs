@@ -1,0 +1,45 @@
+{
+  "file": "typeDogma.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dogmaAttributes": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "attributeID": {
+                "required": true,
+                "type": "integer"
+              },
+              "value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "dogmaEffects": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "effectID": {
+                "required": true,
+                "type": "integer"
+              },
+              "isDefault": {
+                "required": true,
+                "type": "bool"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

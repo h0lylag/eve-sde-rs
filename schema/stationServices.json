@@ -1,0 +1,19 @@
+{
+  "file": "stationServices.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "serviceName": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

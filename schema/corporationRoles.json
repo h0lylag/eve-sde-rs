@@ -1,0 +1,29 @@
+{
+  "file": "corporationRoles.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "roleGroupIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "shortName": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

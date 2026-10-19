@@ -1,0 +1,147 @@
+{
+  "file": "graphicMaterialSets.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "colorHull": {
+        "required": false,
+        "type": {
+          "object": {
+            "a": {
+              "required": true,
+              "type": "float"
+            },
+            "b": {
+              "required": true,
+              "type": "float"
+            },
+            "g": {
+              "required": true,
+              "type": "float"
+            },
+            "r": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "colorPrimary": {
+        "required": false,
+        "type": {
+          "object": {
+            "a": {
+              "required": true,
+              "type": "float"
+            },
+            "b": {
+              "required": true,
+              "type": "float"
+            },
+            "g": {
+              "required": true,
+              "type": "float"
+            },
+            "r": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "colorSecondary": {
+        "required": false,
+        "type": {
+          "object": {
+            "a": {
+              "required": true,
+              "type": "float"
+            },
+            "b": {
+              "required": true,
+              "type": "float"
+            },
+            "g": {
+              "required": true,
+              "type": "float"
+            },
+            "r": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "colorWindow": {
+        "required": false,
+        "type": {
+          "object": {
+            "a": {
+              "required": true,
+              "type": "float"
+            },
+            "b": {
+              "required": true,
+              "type": "float"
+            },
+            "g": {
+              "required": true,
+              "type": "float"
+            },
+            "r": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "custommaterial1": {
+        "required": false,
+        "type": "string"
+      },
+      "custommaterial2": {
+        "required": false,
+        "type": "string"
+      },
+      "description": {
+        "required": true,
+        "type": "string"
+      },
+      "material1": {
+        "required": false,
+        "type": "string"
+      },
+      "material2": {
+        "required": false,
+        "type": "string"
+      },
+      "material3": {
+        "required": false,
+        "type": "string"
+      },
+      "material4": {
+        "required": false,
+        "type": "string"
+      },
+      "resPathInsert": {
+        "required": false,
+        "type": "string"
+      },
+      "sofFactionName": {
+        "required": false,
+        "type": "string"
+      },
+      "sofPatternName": {
+        "required": false,
+        "type": "string"
+      },
+      "sofRaceHint": {
+        "required": false,
+        "type": "string"
+      }
+    }
+  }
+}

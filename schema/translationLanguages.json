@@ -1,0 +1,15 @@
+{
+  "file": "translationLanguages.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

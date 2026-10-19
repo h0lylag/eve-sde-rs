@@ -1,0 +1,137 @@
+{
+  "file": "mapSolarSystems.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "border": {
+        "required": false,
+        "type": "bool"
+      },
+      "constellationID": {
+        "required": true,
+        "type": "integer"
+      },
+      "corridor": {
+        "required": false,
+        "type": "bool"
+      },
+      "disallowedAnchorCategories": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "disallowedAnchorGroups": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "fringe": {
+        "required": false,
+        "type": "bool"
+      },
+      "hub": {
+        "required": false,
+        "type": "bool"
+      },
+      "international": {
+        "required": false,
+        "type": "bool"
+      },
+      "luminosity": {
+        "required": false,
+        "type": "float"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "planetIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "position2D": {
+        "required": false,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "radius": {
+        "required": true,
+        "type": "float"
+      },
+      "regionID": {
+        "required": true,
+        "type": "integer"
+      },
+      "regional": {
+        "required": false,
+        "type": "bool"
+      },
+      "securityClass": {
+        "required": false,
+        "type": "string"
+      },
+      "securityStatus": {
+        "required": true,
+        "type": "float"
+      },
+      "starID": {
+        "required": false,
+        "type": "integer"
+      },
+      "stargateIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "visualEffect": {
+        "required": false,
+        "type": "string"
+      },
+      "wormholeClassID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

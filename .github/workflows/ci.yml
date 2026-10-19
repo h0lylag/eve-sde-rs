@@ -3,7 +3,9 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  check:
+  # The integration tests enable `test-support` through a dev-dependency on
+  # the crate itself, so only `--lib` builds a reduced feature set.
+  features:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -11,15 +13,39 @@ jobs:
           - ""
           - "--no-default-features"
           - "--no-default-features --features download"
-          - "--all-features"
+          - "--no-default-features --features sqlite"
+          - "--no-default-features --features sqlite,download"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy --lib ${{ matrix.features }} -- -D warnings
+  check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
       - run: cargo fmt --check
-      - run: cargo clippy --all-targets ${{ matrix.features }} -- -D warnings
-      - run: cargo test ${{ matrix.features }}
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test --all-features
+  # The model generator, and the models it writes from `schema/`.
+  models:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check --package xtask
+      - run: cargo clippy --package xtask --all-targets -- -D warnings
+      - run: cargo test --package xtask
+      - run: cargo xtask models --check
   # The oldest Rust that Cargo.toml promises to support.
   msrv:
     runs-on: ubuntu-latest
@@ -29,8 +55,7 @@ jobs:
         with:
           toolchain: "1.89"
       - run: cargo test --all-features --locked
-  # Build the docs the way docs.rs does. Doc tests run here too, because only
-  # nightly checks the error codes on `compile_fail` examples.
+  # Build the docs the way docs.rs does.
   docs:
     runs-on: ubuntu-latest
     steps:

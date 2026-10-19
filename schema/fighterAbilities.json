@@ -1,0 +1,39 @@
+{
+  "file": "fighterAbilities.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "disallowInHighSec": {
+        "required": true,
+        "type": "bool"
+      },
+      "disallowInLowSec": {
+        "required": true,
+        "type": "bool"
+      },
+      "displayName": {
+        "required": true,
+        "type": "text"
+      },
+      "iconID": {
+        "required": true,
+        "type": "integer"
+      },
+      "targetMode": {
+        "required": true,
+        "type": "string"
+      },
+      "tooltipText": {
+        "required": false,
+        "type": "text"
+      },
+      "turretGraphicID": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

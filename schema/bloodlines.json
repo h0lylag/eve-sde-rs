@@ -1,0 +1,51 @@
+{
+  "file": "bloodlines.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "charisma": {
+        "required": true,
+        "type": "integer"
+      },
+      "corporationID": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "intelligence": {
+        "required": true,
+        "type": "integer"
+      },
+      "memory": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "perception": {
+        "required": true,
+        "type": "integer"
+      },
+      "raceID": {
+        "required": true,
+        "type": "integer"
+      },
+      "willpower": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "file": "sovereigntyUpgrades.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "fuel": {
+        "required": false,
+        "type": {
+          "object": {
+            "hourly_upkeep": {
+              "required": true,
+              "type": "integer"
+            },
+            "startup_cost": {
+              "required": true,
+              "type": "integer"
+            },
+            "type_id": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "mutually_exclusive_group": {
+        "required": true,
+        "type": "string"
+      },
+      "power_allocation": {
+        "required": false,
+        "type": "integer"
+      },
+      "power_production": {
+        "required": false,
+        "type": "integer"
+      },
+      "workforce_allocation": {
+        "required": false,
+        "type": "integer"
+      },
+      "workforce_production": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

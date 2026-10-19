@@ -1,0 +1,23 @@
+{
+  "file": "shipTreeElements.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "icon": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "file": "mapSecondarySuns.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "effectBeaconTypeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

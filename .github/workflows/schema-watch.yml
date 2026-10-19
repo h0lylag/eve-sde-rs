@@ -1,0 +1,27 @@
+name: SDE schema watch
+# CCP lists every change to the SDE's format in a changelog, newest first.
+# When a change is newer than the build `schema/` was read from, regenerate:
+# run `cargo xtask schema` on a newer build, review the diff of `schema/`,
+# then `cargo xtask models`.
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare CCP's schema changelog with schema/
+        run: |
+          changelog=https://developers.eveonline.com/static-data/tranquility/schema-changelog.yaml
+          newest=$(curl -fsS -A "Mozilla/5.0 (compatible; generic-client)" "$changelog" \
+            | grep -m1 -oE 'afterBuildNumber: [0-9]+' | grep -oE '[0-9]+')
+          ours=$(jq .buildNumber schema/_build.json)
+          echo "Newest format change: after build $newest. schema/ is from build $ours."
+          if [ "$newest" -ge "$ours" ]; then
+            echo "::error::CCP changed the SDE format after build $newest; regenerate schema/ and the models."
+            exit 1
+          fi

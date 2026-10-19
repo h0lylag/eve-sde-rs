@@ -1,0 +1,59 @@
+{
+  "file": "typeLists.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "displayDescription": {
+        "required": false,
+        "type": "text"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "excludedCategoryIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "excludedGroupIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "excludedTypeIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "includedCategoryIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "includedGroupIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "includedTypeIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

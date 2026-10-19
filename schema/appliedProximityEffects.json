@@ -1,0 +1,36 @@
+{
+  "file": "appliedProximityEffects.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffs": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "delaySeconds": {
+        "required": true,
+        "type": "integer"
+      },
+      "radius": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

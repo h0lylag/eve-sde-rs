@@ -1,0 +1,62 @@
+{
+  "file": "certificates.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "groupID": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "recommendedFor": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "skillTypes": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "advanced": {
+                "required": true,
+                "type": "integer"
+              },
+              "basic": {
+                "required": true,
+                "type": "integer"
+              },
+              "elite": {
+                "required": true,
+                "type": "integer"
+              },
+              "improved": {
+                "required": true,
+                "type": "integer"
+              },
+              "standard": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

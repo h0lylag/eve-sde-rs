@@ -1,0 +1,107 @@
+{
+  "file": "types.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "basePrice": {
+        "required": false,
+        "type": "float"
+      },
+      "capacity": {
+        "required": false,
+        "type": "float"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "graphicID": {
+        "required": false,
+        "type": "integer"
+      },
+      "groupID": {
+        "required": true,
+        "type": "integer"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "isDynamicType": {
+        "required": false,
+        "type": "bool"
+      },
+      "isRepackable": {
+        "required": false,
+        "type": "bool"
+      },
+      "marketGroupID": {
+        "required": false,
+        "type": "integer"
+      },
+      "mass": {
+        "required": false,
+        "type": "float"
+      },
+      "metaGroupID": {
+        "required": false,
+        "type": "integer"
+      },
+      "metaLevel": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "packagedVolume": {
+        "required": false,
+        "type": "float"
+      },
+      "portionSize": {
+        "required": true,
+        "type": "integer"
+      },
+      "published": {
+        "required": true,
+        "type": "bool"
+      },
+      "raceID": {
+        "required": false,
+        "type": "integer"
+      },
+      "radius": {
+        "required": false,
+        "type": "float"
+      },
+      "shipTreeGroupID": {
+        "required": false,
+        "type": "integer"
+      },
+      "soundID": {
+        "required": false,
+        "type": "integer"
+      },
+      "techLevel": {
+        "required": false,
+        "type": "integer"
+      },
+      "variationParentTypeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "volume": {
+        "required": false,
+        "type": "float"
+      }
+    }
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "file": "industryModifierSources.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "copying": {
+        "required": false,
+        "type": {
+          "object": {
+            "cost": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "invention": {
+        "required": false,
+        "type": {
+          "object": {
+            "cost": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "manufacturing": {
+        "required": false,
+        "type": {
+          "object": {
+            "cost": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "material": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "filterID": {
+                      "required": false,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "filterID": {
+                      "required": false,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "reaction": {
+        "required": false,
+        "type": {
+          "object": {
+            "material": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "filterID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "filterID": {
+                      "required": false,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "researchMaterial": {
+        "required": false,
+        "type": {
+          "object": {
+            "cost": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "researchTime": {
+        "required": false,
+        "type": {
+          "object": {
+            "cost": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            },
+            "time": {
+              "required": false,
+              "type": {
+                "array": {
+                  "object": {
+                    "dogmaAttributeID": {
+                      "required": true,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

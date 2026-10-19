@@ -1,6 +1,6 @@
 [package]
 name = "eve-sde"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.89"
 description = "Load, search and update EVE Online's Static Data Export (SDE)"
@@ -9,32 +9,77 @@ repository = "https://github.com/h0lylag/eve-sde-rs"
 readme = "README.md"
 keywords = ["eve-online", "sde", "static-data"]
 categories = ["parser-implementations", "game-development"]
-exclude = [".github/", ".gitignore"]
+exclude = [".cargo/", ".docs/", ".github/", ".gitignore", "schema/", "xtask/"]
 
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[workspace]
+# `xtask` generates the models (`cargo xtask`). It is not published.
+members = ["xtask"]
+resolver = "3"
+
+[workspace.dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+zip = { version = "9.0.5", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+
 [features]
-default = ["load"]
-load = ["dep:zip", "dep:serde", "dep:serde_json"]
-download = ["dep:ureq", "dep:zip", "dep:serde", "dep:serde_json"]
+default = ["archive"]
+archive = ["dep:zip", "dep:serde", "dep:serde_json"]
+download = ["archive", "dep:ureq", "dep:tempfile"]
+test-support = ["archive"]
+# The SQLite store, linked against the system's SQLite.
+sqlite = ["archive", "dep:rusqlite", "dep:tempfile"]
+# The SQLite store, with SQLite compiled in.
+sqlite-bundled = ["sqlite", "rusqlite/bundled"]
 
 [dependencies]
-serde = { version = "1.0.229", features = ["derive"], optional = true }
-serde_json = { version = "1.0.151", optional = true }
+rusqlite = { version = "0.40.2", default-features = false, features = ["cache"], optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+tempfile = { version = "3.27.0", optional = true }
 ureq = { version = "3.4.2", optional = true }
-zip = { version = "8.6.0", default-features = false, features = ["deflate-flate2-zlib-rs"], optional = true }
+zip = { workspace = true, optional = true }
 
 [dev-dependencies]
+# The integration tests build their archives with the `testing` module.
+eve-sde = { path = ".", features = ["test-support"] }
 tempfile = "3.27.0"
 
-[lints.rust]
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+missing_docs = "warn"
 unsafe_code = "forbid"
+
+# Each lint below enforces one of the crate's coding rules.
+[workspace.lints.clippy]
+# Clippy's pedantic lints. Where one must yield, `#[expect(...)]` says why.
+pedantic = { level = "warn", priority = -1 }
+# A type's name inside its own `impl` is `Self`. A nursery lint.
+use_self = "warn"
+# `as` only where truncation, wrapping or rounding is the intent, stated with
+# `#[expect(..., reason = "...")]`.
+cast_lossless = "warn"
+cast_possible_truncation = "warn"
+cast_possible_wrap = "warn"
+cast_precision_loss = "warn"
+cast_sign_loss = "warn"
+# Public functions document their errors and panics.
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+# Modules are `foo.rs` with children in `foo/`, not `foo/mod.rs`.
+mod_module_files = "warn"
+# Production code uses `expect` with the reason, or handles the error.
+unwrap_used = "warn"
+
+[lints]
+workspace = true
 
 [[example]]
 name = "lookup"
-required-features = ["load"]
+required-features = ["archive"]
 
 [[example]]
 name = "update"
@@ -42,4 +87,4 @@ required-features = ["download"]
 
 [[example]]
 name = "type_name"
-required-features = ["load"]
+required-features = ["archive"]

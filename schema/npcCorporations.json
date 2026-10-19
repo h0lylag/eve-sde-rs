@@ -1,0 +1,203 @@
+{
+  "file": "npcCorporations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "allowedMemberRaces": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "ceoID": {
+        "required": false,
+        "type": "integer"
+      },
+      "corporationTrades": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "deleted": {
+        "required": true,
+        "type": "bool"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "divisions": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "divisionNumber": {
+                "required": true,
+                "type": "integer"
+              },
+              "leaderID": {
+                "required": true,
+                "type": "integer"
+              },
+              "size": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "enemyID": {
+        "required": false,
+        "type": "integer"
+      },
+      "exchangeRates": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "extent": {
+        "required": true,
+        "type": "string"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "friendID": {
+        "required": false,
+        "type": "integer"
+      },
+      "hasPlayerPersonnelManager": {
+        "required": true,
+        "type": "bool"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "initialPrice": {
+        "required": true,
+        "type": "integer"
+      },
+      "investors": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "lpOfferTables": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "mainActivityID": {
+        "required": false,
+        "type": "integer"
+      },
+      "memberLimit": {
+        "required": true,
+        "type": "integer"
+      },
+      "minSecurity": {
+        "required": true,
+        "type": "float"
+      },
+      "minimumJoinStanding": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "raceID": {
+        "required": false,
+        "type": "integer"
+      },
+      "secondaryActivityID": {
+        "required": false,
+        "type": "integer"
+      },
+      "sendCharTerminationMessage": {
+        "required": true,
+        "type": "bool"
+      },
+      "shares": {
+        "required": true,
+        "type": "integer"
+      },
+      "size": {
+        "required": true,
+        "type": "string"
+      },
+      "sizeFactor": {
+        "required": false,
+        "type": "float"
+      },
+      "solarSystemID": {
+        "required": false,
+        "type": "integer"
+      },
+      "stationID": {
+        "required": false,
+        "type": "integer"
+      },
+      "taxRate": {
+        "required": true,
+        "type": "float"
+      },
+      "tickerName": {
+        "required": true,
+        "type": "string"
+      },
+      "uniqueName": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

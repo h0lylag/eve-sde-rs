@@ -1,0 +1,40 @@
+{
+  "file": "contrabandTypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "factions": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "attackMinSec": {
+                "required": true,
+                "type": "float"
+              },
+              "confiscateMinSec": {
+                "required": true,
+                "type": "float"
+              },
+              "fineByValue": {
+                "required": true,
+                "type": "float"
+              },
+              "standingLoss": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

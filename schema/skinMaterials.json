@@ -1,0 +1,19 @@
+{
+  "file": "skinMaterials.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "materialSetID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

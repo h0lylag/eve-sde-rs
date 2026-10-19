@@ -1,0 +1,19 @@
+{
+  "file": "dogmaAttributeCategories.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

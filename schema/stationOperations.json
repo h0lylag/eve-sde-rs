@@ -1,0 +1,74 @@
+{
+  "file": "stationOperations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "activityID": {
+        "required": true,
+        "type": "integer"
+      },
+      "border": {
+        "required": true,
+        "type": "float"
+      },
+      "corridor": {
+        "required": true,
+        "type": "float"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "fringe": {
+        "required": true,
+        "type": "float"
+      },
+      "hub": {
+        "required": true,
+        "type": "float"
+      },
+      "manufacturingFactor": {
+        "required": true,
+        "type": "float"
+      },
+      "operationName": {
+        "required": true,
+        "type": "text"
+      },
+      "ratio": {
+        "required": true,
+        "type": "float"
+      },
+      "researchFactor": {
+        "required": true,
+        "type": "float"
+      },
+      "services": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "stationTypes": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

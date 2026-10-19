@@ -1,0 +1,27 @@
+{
+  "file": "accountingEntryTypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      },
+      "journalMessage": {
+        "required": false,
+        "type": "text"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

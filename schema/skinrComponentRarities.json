@@ -1,0 +1,19 @@
+{
+  "file": "skinrComponentRarities.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "rank": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

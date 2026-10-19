@@ -1,0 +1,327 @@
+{
+  "file": "freelanceJobSchemas.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "_value": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "string"
+              },
+              "contentTags": {
+                "required": true,
+                "type": {
+                  "array": "string"
+                }
+              },
+              "contributionMultiplier": {
+                "required": false,
+                "type": {
+                  "object": {
+                    "defaultValue": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "description": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "iconID": {
+                      "required": true,
+                      "type": "string"
+                    },
+                    "maxValue": {
+                      "required": true,
+                      "type": "integer"
+                    },
+                    "minValue": {
+                      "required": true,
+                      "type": "float"
+                    },
+                    "title": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "unsetDescription": {
+                      "required": true,
+                      "type": "text"
+                    }
+                  }
+                }
+              },
+              "description": {
+                "required": true,
+                "type": "text"
+              },
+              "iconID": {
+                "required": true,
+                "type": "string"
+              },
+              "maxContributionsPerParticipant": {
+                "required": true,
+                "type": {
+                  "object": {
+                    "description": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "iconID": {
+                      "required": true,
+                      "type": "string"
+                    },
+                    "title": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "unsetDescription": {
+                      "required": true,
+                      "type": "text"
+                    }
+                  }
+                }
+              },
+              "maxProgressPerContribution": {
+                "required": false,
+                "type": {
+                  "object": {
+                    "description": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "iconID": {
+                      "required": true,
+                      "type": "string"
+                    },
+                    "title": {
+                      "required": true,
+                      "type": "text"
+                    },
+                    "unsetDescription": {
+                      "required": true,
+                      "type": "text"
+                    }
+                  }
+                }
+              },
+              "parameters": {
+                "required": true,
+                "type": {
+                  "array": {
+                    "object": {
+                      "_key": {
+                        "required": true,
+                        "type": "string"
+                      },
+                      "boolean": {
+                        "required": false,
+                        "type": {
+                          "object": {
+                            "choiceLabel": {
+                              "required": true,
+                              "type": "text"
+                            },
+                            "default": {
+                              "required": true,
+                              "type": "bool"
+                            },
+                            "description": {
+                              "required": true,
+                              "type": "text"
+                            },
+                            "iconID": {
+                              "required": true,
+                              "type": "string"
+                            },
+                            "optionFalse": {
+                              "required": true,
+                              "type": {
+                                "object": {
+                                  "description": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "title": {
+                                    "required": true,
+                                    "type": "text"
+                                  }
+                                }
+                              }
+                            },
+                            "optionTrue": {
+                              "required": true,
+                              "type": {
+                                "object": {
+                                  "description": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "title": {
+                                    "required": true,
+                                    "type": "text"
+                                  }
+                                }
+                              }
+                            },
+                            "title": {
+                              "required": true,
+                              "type": "text"
+                            }
+                          }
+                        }
+                      },
+                      "itemDelivery": {
+                        "required": false,
+                        "type": {
+                          "object": {
+                            "deliveryLocation": {
+                              "required": true,
+                              "type": {
+                                "object": {
+                                  "acceptedValueTypes": {
+                                    "required": true,
+                                    "type": {
+                                      "array": "string"
+                                    }
+                                  },
+                                  "description": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "iconID": {
+                                    "required": true,
+                                    "type": "string"
+                                  },
+                                  "maxEntries": {
+                                    "required": true,
+                                    "type": "integer"
+                                  },
+                                  "title": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "unsetDescription": {
+                                    "required": true,
+                                    "type": "text"
+                                  }
+                                }
+                              }
+                            },
+                            "description": {
+                              "required": true,
+                              "type": "text"
+                            },
+                            "iconID": {
+                              "required": true,
+                              "type": "string"
+                            },
+                            "inventoryType": {
+                              "required": true,
+                              "type": {
+                                "object": {
+                                  "acceptedValueTypes": {
+                                    "required": true,
+                                    "type": {
+                                      "array": "string"
+                                    }
+                                  },
+                                  "description": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "iconID": {
+                                    "required": true,
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "required": true,
+                                    "type": "text"
+                                  },
+                                  "unsetDescription": {
+                                    "required": true,
+                                    "type": "text"
+                                  }
+                                }
+                              }
+                            },
+                            "title": {
+                              "required": true,
+                              "type": "text"
+                            }
+                          }
+                        }
+                      },
+                      "matcher": {
+                        "required": false,
+                        "type": {
+                          "object": {
+                            "acceptedValueTypes": {
+                              "required": true,
+                              "type": {
+                                "array": "string"
+                              }
+                            },
+                            "description": {
+                              "required": true,
+                              "type": "text"
+                            },
+                            "iconID": {
+                              "required": true,
+                              "type": "string"
+                            },
+                            "maxEntries": {
+                              "required": true,
+                              "type": "integer"
+                            },
+                            "optional": {
+                              "required": true,
+                              "type": "bool"
+                            },
+                            "title": {
+                              "required": true,
+                              "type": "text"
+                            },
+                            "type": {
+                              "required": true,
+                              "type": "string"
+                            },
+                            "unsetDescription": {
+                              "required": true,
+                              "type": "text"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "progressDescription": {
+                "required": true,
+                "type": "text"
+              },
+              "rewardDescription": {
+                "required": true,
+                "type": "text"
+              },
+              "targetDescription": {
+                "required": true,
+                "type": "text"
+              },
+              "title": {
+                "required": true,
+                "type": "text"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "file": "archetypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "title": {
+        "required": false,
+        "type": "text"
+      }
+    }
+  }
+}

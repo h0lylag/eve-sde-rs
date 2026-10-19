@@ -1,0 +1,3 @@
+[alias]
+# The model generator, the `xtask` member of the workspace.
+xtask = "run --quiet --package xtask --"

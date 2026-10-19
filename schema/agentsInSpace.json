@@ -1,0 +1,27 @@
+{
+  "file": "agentsInSpace.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dungeonID": {
+        "required": true,
+        "type": "integer"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "spawnPointID": {
+        "required": true,
+        "type": "integer"
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

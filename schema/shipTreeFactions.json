@@ -1,0 +1,36 @@
+{
+  "file": "shipTreeFactions.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "elements": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "icon": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "file": "metaGroups.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "color": {
+        "required": false,
+        "type": {
+          "object": {
+            "b": {
+              "required": true,
+              "type": "float"
+            },
+            "g": {
+              "required": true,
+              "type": "float"
+            },
+            "r": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "iconSuffix": {
+        "required": false,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

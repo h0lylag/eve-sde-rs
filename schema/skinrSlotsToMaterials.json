@@ -1,0 +1,28 @@
+{
+  "file": "skinrSlotsToMaterials.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "_value": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "materialID": {
+                "required": true,
+                "type": "integer"
+              },
+              "slotID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

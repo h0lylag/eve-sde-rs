@@ -1,0 +1,40 @@
+{
+  "file": "systemDbuffEmitters.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffs": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "duration": {
+        "required": true,
+        "type": "integer"
+      },
+      "excludeProtected": {
+        "required": true,
+        "type": "bool"
+      },
+      "interval": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

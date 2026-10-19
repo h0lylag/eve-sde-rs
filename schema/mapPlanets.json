@@ -1,0 +1,154 @@
+{
+  "file": "mapPlanets.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "asteroidBeltIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "attributes": {
+        "required": true,
+        "type": {
+          "object": {
+            "heightMap1": {
+              "required": true,
+              "type": "integer"
+            },
+            "heightMap2": {
+              "required": true,
+              "type": "integer"
+            },
+            "population": {
+              "required": true,
+              "type": "bool"
+            },
+            "shaderPreset": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "celestialIndex": {
+        "required": true,
+        "type": "integer"
+      },
+      "moonIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "npcStationIDs": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "orbitID": {
+        "required": true,
+        "type": "integer"
+      },
+      "position": {
+        "required": true,
+        "type": {
+          "object": {
+            "x": {
+              "required": true,
+              "type": "float"
+            },
+            "y": {
+              "required": true,
+              "type": "float"
+            },
+            "z": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "radius": {
+        "required": true,
+        "type": "integer"
+      },
+      "solarSystemID": {
+        "required": true,
+        "type": "integer"
+      },
+      "statistics": {
+        "required": true,
+        "type": {
+          "object": {
+            "density": {
+              "required": true,
+              "type": "float"
+            },
+            "eccentricity": {
+              "required": true,
+              "type": "float"
+            },
+            "escapeVelocity": {
+              "required": true,
+              "type": "float"
+            },
+            "locked": {
+              "required": true,
+              "type": "bool"
+            },
+            "massDust": {
+              "required": true,
+              "type": "float"
+            },
+            "massGas": {
+              "required": false,
+              "type": "float"
+            },
+            "orbitPeriod": {
+              "required": false,
+              "type": "float"
+            },
+            "orbitRadius": {
+              "required": false,
+              "type": "float"
+            },
+            "pressure": {
+              "required": true,
+              "type": "float"
+            },
+            "rotationRate": {
+              "required": true,
+              "type": "float"
+            },
+            "spectralClass": {
+              "required": true,
+              "type": "string"
+            },
+            "surfaceGravity": {
+              "required": false,
+              "type": "float"
+            },
+            "temperature": {
+              "required": true,
+              "type": "float"
+            }
+          }
+        }
+      },
+      "typeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "uniqueName": {
+        "required": false,
+        "type": "text"
+      }
+    }
+  }
+}

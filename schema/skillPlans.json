@@ -1,0 +1,69 @@
+{
+  "file": "skillPlans.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "careerPathID": {
+        "required": false,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      },
+      "milestones": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "level": {
+                "required": false,
+                "type": "integer"
+              },
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "npcCorporationDivision": {
+        "required": false,
+        "type": "integer"
+      },
+      "skillRequirements": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "level": {
+                "required": true,
+                "type": "integer"
+              },
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

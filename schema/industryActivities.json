@@ -1,0 +1,19 @@
+{
+  "file": "industryActivities.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "string"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

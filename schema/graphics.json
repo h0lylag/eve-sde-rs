@@ -1,0 +1,41 @@
+{
+  "file": "graphics.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "graphicFile": {
+        "required": false,
+        "type": "string"
+      },
+      "iconFolder": {
+        "required": false,
+        "type": "string"
+      },
+      "sofFactionName": {
+        "required": false,
+        "type": "string"
+      },
+      "sofHullName": {
+        "required": false,
+        "type": "string"
+      },
+      "sofLayout": {
+        "required": false,
+        "type": {
+          "array": "string"
+        }
+      },
+      "sofMaterialSetID": {
+        "required": false,
+        "type": "integer"
+      },
+      "sofRaceName": {
+        "required": false,
+        "type": "string"
+      }
+    }
+  }
+}

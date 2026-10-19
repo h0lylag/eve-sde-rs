@@ -1,0 +1,15 @@
+{
+  "file": "compressibleTypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "compressedTypeID": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

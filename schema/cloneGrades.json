@@ -1,0 +1,32 @@
+{
+  "file": "cloneGrades.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "skills": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "level": {
+                "required": true,
+                "type": "integer"
+              },
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

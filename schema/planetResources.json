@@ -1,0 +1,46 @@
+{
+  "file": "planetResources.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "power": {
+        "required": false,
+        "type": "integer"
+      },
+      "reagent": {
+        "required": false,
+        "type": {
+          "object": {
+            "amount_per_cycle": {
+              "required": true,
+              "type": "integer"
+            },
+            "cycle_period": {
+              "required": true,
+              "type": "integer"
+            },
+            "secured_capacity": {
+              "required": true,
+              "type": "integer"
+            },
+            "type_id": {
+              "required": true,
+              "type": "integer"
+            },
+            "unsecured_capacity": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "workforce": {
+        "required": false,
+        "type": "integer"
+      }
+    }
+  }
+}

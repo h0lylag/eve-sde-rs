@@ -1,0 +1,50 @@
+{
+  "file": "expertSystems.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "associatedShipTypes": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "durationDays": {
+        "required": true,
+        "type": "integer"
+      },
+      "hidden": {
+        "required": true,
+        "type": "bool"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      },
+      "retired": {
+        "required": true,
+        "type": "bool"
+      },
+      "skillsGranted": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "level": {
+                "required": true,
+                "type": "integer"
+              },
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

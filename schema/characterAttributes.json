@@ -1,0 +1,31 @@
+{
+  "file": "characterAttributes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "string"
+      },
+      "iconID": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "notes": {
+        "required": true,
+        "type": "string"
+      },
+      "shortDescription": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

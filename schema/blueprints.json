@@ -1,0 +1,351 @@
+{
+  "file": "blueprints.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "activities": {
+        "required": true,
+        "type": {
+          "object": {
+            "copying": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "invention": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "products": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "probability": {
+                            "required": false,
+                            "type": "float"
+                          },
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "manufacturing": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "products": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "reaction": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": true,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "products": {
+                    "required": true,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": true,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "research_material": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "research_time": {
+              "required": false,
+              "type": {
+                "object": {
+                  "materials": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "quantity": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "skills": {
+                    "required": false,
+                    "type": {
+                      "array": {
+                        "object": {
+                          "level": {
+                            "required": true,
+                            "type": "integer"
+                          },
+                          "typeID": {
+                            "required": true,
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "time": {
+                    "required": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "blueprintTypeID": {
+        "required": true,
+        "type": "integer"
+      },
+      "maxProductionLimit": {
+        "required": true,
+        "type": "integer"
+      }
+    }
+  }
+}

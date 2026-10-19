@@ -17,12 +17,12 @@
 use crate::archive::{Archive, BuildInfo, limit_error, read_metadata};
 use crate::error::{Error, PathContext, Result, io_context};
 use std::ffi::OsString;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::{self, BufReader, Read, Write};
 use std::ops::ControlFlow;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Duration;
+use tempfile::NamedTempFile;
 use ureq::http::header::{ETAG, IF_NONE_MATCH};
 
 /// Where CCP publishes SDE builds.
@@ -43,13 +43,15 @@ const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Latest {
-    /// The ETag you passed still matches, so nothing changed.
+    /// The `ETag` you passed still matches, so nothing changed.
     Unchanged,
-    /// The latest build, and the ETag of this answer if the server sent one.
+    /// The latest build, and the `ETag` of this answer if the server sent one.
     /// Pass `etag` to the next [`Client::latest`] call so that CCP can answer
     /// [`Latest::Unchanged`] without sending the build again.
     Available {
+        /// The latest build.
         build: BuildInfo,
+        /// The `ETag` of this answer, if the server sent one.
         etag: Option<String>,
     },
 }
@@ -60,20 +62,30 @@ pub enum Latest {
 pub enum Update {
     /// The file already holds this build, which is the latest or newer.
     UpToDate(u32),
-    /// The file was missing (`from` is `None`) or older, and now holds build
-    /// `to`.
-    Updated { from: Option<u32>, to: u32 },
+    /// The file was missing or older, and now holds a newer build.
+    Updated {
+        /// The build the file held before, or `None` if it was missing.
+        from: Option<u32>,
+        /// The build the file holds now.
+        to: u32,
+    },
 }
 
-/// The build in a local SDE ZIP, or `None` if there is no such file. A file
-/// that exists but is not an SDE ZIP is an error.
+/// The build in a local SDE ZIP, or `None` if there is no such file.
+///
+/// # Errors
+///
+/// Fails if the file exists but cannot be opened or is not an SDE ZIP.
 pub fn local_build(path: impl AsRef<Path>) -> Result<Option<BuildInfo>> {
-    let path = path.as_ref();
-    match File::open(path).path_context("open", path) {
-        Ok(file) => Ok(Some(Archive::new(BufReader::new(file))?.build().clone())),
-        Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e.into()),
+    fn local_build(path: &Path) -> Result<Option<BuildInfo>> {
+        let file = match File::open(path) {
+            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
+            other => other.path_context("open", path)?,
+        };
+        let archive = Archive::from_reader(BufReader::new(file))?;
+        Ok(Some(archive.build().clone()))
     }
+    local_build(path.as_ref())
 }
 
 /// Talks to CCP's SDE server. Clones share one connection pool.
@@ -84,9 +96,9 @@ pub struct Client {
 }
 
 impl Client {
-    /// `user_agent` identifies your app to CCP, e.g.
-    /// `my-bot/1.2 (me@example.com)`.
-    pub fn new(user_agent: &str) -> Client {
+    /// A client that sends `user_agent` with every request.
+    #[must_use]
+    pub fn new(user_agent: &str) -> Self {
         let agent = ureq::Agent::config_builder()
             .user_agent(user_agent)
             .http_status_as_error(false)
@@ -95,7 +107,7 @@ impl Client {
             .timeout_global(Some(DOWNLOAD_TIMEOUT))
             .build()
             .into();
-        Client {
+        Self {
             agent,
             base: BASE_URL.to_owned(),
         }
@@ -103,8 +115,9 @@ impl Client {
 
     /// Use another server with the same layout instead of CCP's, such as a
     /// mirror or a test server.
-    pub fn with_base_url(mut self, base: impl Into<String>) -> Client {
-        self.base = base.into().trim_end_matches('/').to_owned();
+    #[must_use]
+    pub fn with_base_url(mut self, base: impl Into<String>) -> Self {
+        base.into().trim_end_matches('/').clone_into(&mut self.base);
         self
     }
 
@@ -138,7 +151,7 @@ impl Client {
                     .and_then(|v| v.to_str().ok())
                     .map(str::to_owned);
                 let body = read_metadata(response.body_mut().as_reader(), |e| {
-                    io_context(e, format!("cannot read `{url}`")).into()
+                    Error::Io(io_context(e, format!("cannot read `{url}`")))
                 })?;
                 Ok(Latest::Available {
                     build: BuildInfo::parse(&body)?,
@@ -167,13 +180,13 @@ impl Client {
         &self,
         build: u32,
         dest: impl AsRef<Path>,
-        progress: impl FnMut(u64, Option<u64>) -> ControlFlow<()>,
+        mut progress: impl FnMut(u64, Option<u64>) -> ControlFlow<()>,
     ) -> Result<BuildInfo> {
         let dest = dest.as_ref();
         let lock_file = lock_path(dest)?;
-        let (temp, info) = self.fetch(build, dest, progress)?;
+        let (temp, info) = self.fetch(build, dest, &mut progress)?;
         let _guard = lock(&lock_file)?;
-        temp.persist(dest)?;
+        persist(temp, dest)?;
         Ok(info)
     }
 
@@ -183,8 +196,8 @@ impl Client {
         &self,
         build: u32,
         dest: &Path,
-        mut progress: impl FnMut(u64, Option<u64>) -> ControlFlow<()>,
-    ) -> Result<(TempFile, BuildInfo)> {
+        progress: &mut dyn FnMut(u64, Option<u64>) -> ControlFlow<()>,
+    ) -> Result<(NamedTempFile, BuildInfo)> {
         let url = format!("{}/eve-online-static-data-{build}-jsonl.zip", self.base);
         let response = self.agent.get(&url).call().map_err(Error::http)?;
         let status = response.status().as_u16();
@@ -196,7 +209,7 @@ impl Client {
             return Err(limit_error("download", MAX_DOWNLOAD_BYTES));
         }
 
-        let (temp, mut file) = TempFile::next_to(dest)?;
+        let mut temp = temp_file_next_to(dest)?;
         let mut body = response.into_body().into_reader();
         let mut buf = vec![0; 64 * 1024];
         let mut written = 0;
@@ -205,22 +218,26 @@ impl Client {
                 Ok(0) => break,
                 Ok(n) => n,
                 Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
-                Err(e) => return Err(io_context(e, format!("cannot read `{url}`")).into()),
+                Err(e) => return Err(Error::Io(io_context(e, format!("cannot read `{url}`")))),
             };
+            // Widening: `usize` is at most 64 bits on every target.
             written += n as u64;
             if written > MAX_DOWNLOAD_BYTES {
                 return Err(limit_error("download", MAX_DOWNLOAD_BYTES));
             }
-            file.write_all(&buf[..n])
-                .path_context("write", &temp.path)?;
+            let path = temp.path().to_owned();
+            temp.as_file_mut()
+                .write_all(&buf[..n])
+                .path_context("write", &path)?;
             if progress(written, total).is_break() {
                 return Err(Error::Cancelled);
             }
         }
-        file.sync_all().path_context("write", &temp.path)?;
-        drop(file);
+        temp.as_file()
+            .sync_all()
+            .path_context("write", temp.path())?;
 
-        let info = verify(&temp.path)?;
+        let info = verify(temp.path())?;
         if info.build_number != build {
             return Err(Error::BuildMismatch {
                 expected: build,
@@ -241,42 +258,52 @@ impl Client {
     /// ZIP, because `update` never replaces a file it cannot identify. On
     /// failure `path` stays as it was.
     pub fn update(&self, path: impl AsRef<Path>) -> Result<Update> {
-        let path = path.as_ref();
+        self.update_path(path.as_ref())
+    }
+
+    fn update_path(&self, path: &Path) -> Result<Update> {
         let lock_file = lock_path(path)?;
         let local = local_build(path)?.map(|b| b.build_number);
-        let Latest::Available { build, .. } = self.latest(None)? else {
-            unreachable!("`latest` answers `Unchanged` only when given an ETag");
-        };
-        match local {
-            Some(have) if have >= build.build_number => Ok(Update::UpToDate(have)),
-            _ => {
-                let (temp, _) =
-                    self.fetch(build.build_number, path, |_, _| ControlFlow::Continue(()))?;
-                let _guard = lock(&lock_file)?;
-                // Another writer may have updated the file in the meantime.
-                let current = local_build(path)?.map(|b| b.build_number);
-                if let Some(have) = current
-                    && have >= build.build_number
-                {
-                    return Ok(Update::UpToDate(have));
-                }
-                temp.persist(path)?;
-                Ok(Update::Updated {
-                    from: current,
-                    to: build.build_number,
-                })
+        let build = match self.latest(None)? {
+            Latest::Available { build, .. } => build,
+            Latest::Unchanged => {
+                unreachable!("`latest` answers `Unchanged` only when given an ETag")
             }
+        };
+        if let Some(have) = local
+            && have >= build.build_number
+        {
+            return Ok(Update::UpToDate(have));
         }
+        let (temp, _) = self.fetch(build.build_number, path, &mut |_, _| {
+            ControlFlow::Continue(())
+        })?;
+        let _guard = lock(&lock_file)?;
+        // Another writer may have updated the file in the meantime.
+        let current = local_build(path)?.map(|b| b.build_number);
+        if let Some(have) = current
+            && have >= build.build_number
+        {
+            return Ok(Update::UpToDate(have));
+        }
+        persist(temp, path)?;
+        Ok(Update::Updated {
+            from: current,
+            to: build.build_number,
+        })
     }
 }
 
 /// `.<filename>.lock` beside `dest`. Called first, so a destination without
 /// a file name fails before anything is downloaded.
-fn lock_path(dest: &Path) -> io::Result<PathBuf> {
-    let filename = dest.file_name().ok_or_else(|| {
+fn lock_path(dest: &Path) -> Result<PathBuf> {
+    let Some(filename) = dest.file_name() else {
         let message = format!("destination `{}` needs a file name", dest.display());
-        io::Error::new(io::ErrorKind::InvalidInput, message)
-    })?;
+        return Err(Error::Io(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            message,
+        )));
+    };
     let mut name = OsString::from(".");
     name.push(filename);
     name.push(".lock");
@@ -286,7 +313,7 @@ fn lock_path(dest: &Path) -> io::Result<PathBuf> {
 /// Lock `path`, waiting while another writer holds it. The file is never
 /// deleted, so every process locks the same file. Dropping the handle
 /// releases the lock, even during a panic.
-fn lock(path: &Path) -> io::Result<File> {
+fn lock(path: &Path) -> Result<File> {
     let file = File::options()
         .read(true)
         .write(true)
@@ -302,56 +329,34 @@ fn lock(path: &Path) -> io::Result<File> {
 /// decompresses with a matching checksum.
 fn verify(path: &Path) -> Result<BuildInfo> {
     let file = File::open(path).path_context("open", path)?;
-    let mut archive = Archive::new(BufReader::new(file))?;
+    let mut archive = Archive::from_reader(BufReader::new(file))?;
     archive.verify()?;
     Ok(archive.build().clone())
 }
 
-/// A file next to the destination that deletes itself unless persisted.
-struct TempFile {
-    path: PathBuf,
-    keep: bool,
+/// A new file `.<filename>.part-<random>` beside `dest`. It deletes itself
+/// unless persisted, and is never a symlink or an existing file.
+fn temp_file_next_to(dest: &Path) -> Result<NamedTempFile> {
+    let name = dest
+        .file_name()
+        .map_or_else(|| "sde".into(), |n| n.to_string_lossy());
+    let dir = match dest.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir,
+        _ => Path::new("."),
+    };
+    tempfile::Builder::new()
+        .prefix(&format!(".{name}.part-"))
+        .tempfile_in(dir)
+        .map_err(|e| {
+            let context = format!("cannot create a temporary file in `{}`", dir.display());
+            Error::Io(io_context(e, context))
+        })
 }
 
-impl TempFile {
-    /// Create a file without replacing an existing file or following a symlink.
-    fn next_to(dest: &Path) -> io::Result<(TempFile, File)> {
-        static COUNT: AtomicU32 = AtomicU32::new(0);
-        let name = dest
-            .file_name()
-            .map_or_else(|| "sde".into(), |n| n.to_string_lossy());
-        loop {
-            let id = format!(
-                "{}-{}",
-                std::process::id(),
-                COUNT.fetch_add(1, Ordering::Relaxed)
-            );
-            let path = dest.with_file_name(format!(".{name}.part-{id}"));
-            match File::create_new(&path).path_context("create", &path) {
-                Ok(file) => return Ok((TempFile { path, keep: false }, file)),
-                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
-                Err(e) => return Err(e),
-            }
-        }
-    }
-
-    /// Move the file to `dest`, replacing what is there.
-    fn persist(mut self, dest: &Path) -> io::Result<()> {
-        fs::rename(&self.path, dest).map_err(|e| {
-            io_context(
-                e,
-                format!("cannot move the download to `{}`", dest.display()),
-            )
-        })?;
-        self.keep = true;
-        Ok(())
-    }
-}
-
-impl Drop for TempFile {
-    fn drop(&mut self) {
-        if !self.keep {
-            let _ = fs::remove_file(&self.path);
-        }
-    }
+/// Move the finished download to `dest`, replacing what is there.
+fn persist(temp: NamedTempFile, dest: &Path) -> Result<()> {
+    temp.persist(dest).map(drop).map_err(|e| {
+        let context = format!("cannot move the download to `{}`", dest.display());
+        Error::Io(io_context(e.error, context))
+    })
 }

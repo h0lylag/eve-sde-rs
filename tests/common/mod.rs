@@ -1,6 +1,10 @@
-#![allow(dead_code)]
+//! Helpers for the integration tests: low-level ZIP helpers for archives that
+//! `ArchiveBuilder` cannot make, such as one whose headers understate its
+//! sizes, and a listing of a folder.
+#![allow(dead_code, reason = "each test crate uses only some of these helpers")]
 
 use std::io::{Cursor, Write};
+use std::path::Path;
 use zip::ZipWriter;
 use zip::write::SimpleFileOptions;
 
@@ -13,21 +17,11 @@ pub fn build_line(build: u32) -> String {
 
 /// A ZIP holding exactly these files.
 pub fn zip_bytes(files: &[(&str, &str)]) -> Vec<u8> {
-    zip_with(files, SimpleFileOptions::default())
-}
-
-/// Like [`zip_bytes`] but uncompressed, so file contents appear verbatim.
-pub fn stored_zip_bytes(files: &[(&str, &str)]) -> Vec<u8> {
-    zip_with(
-        files,
-        SimpleFileOptions::default().compression_method(zip::CompressionMethod::Stored),
-    )
-}
-
-fn zip_with(files: &[(&str, &str)], options: SimpleFileOptions) -> Vec<u8> {
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for (name, body) in files {
-        writer.start_file(*name, options).unwrap();
+        writer
+            .start_file(*name, SimpleFileOptions::default())
+            .unwrap();
         writer.write_all(body.as_bytes()).unwrap();
     }
     writer.finish().unwrap().into_inner()
@@ -55,26 +49,12 @@ pub fn understate_sizes(bytes: &mut [u8]) {
     }
 }
 
-/// A full-looking SDE ZIP: the given files, plus an empty file for every
-/// table the crate expects. Pass `skip` to leave one table out.
-#[cfg(feature = "load")]
-pub fn sde_zip(files: &[(&str, &str)], skip: Option<&str>) -> Vec<u8> {
-    let metadata = build_line(3569502);
-    let mut entries: Vec<(&str, &str)> = vec![("_sde.jsonl", &metadata)];
-    for name in eve_sde::modeled_files() {
-        if Some(*name) == skip {
-            continue;
-        }
-        let body = files
-            .iter()
-            .find(|(n, _)| n == name)
-            .map_or("", |(_, b)| *b);
-        entries.push((name, body));
-    }
-    for (name, body) in files {
-        if !eve_sde::modeled_files().contains(name) {
-            entries.push((name, body));
-        }
-    }
-    zip_bytes(&entries)
+/// The sorted names of the files in `dir`.
+pub fn file_names(dir: &Path) -> Vec<String> {
+    let mut names: Vec<_> = std::fs::read_dir(dir)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
+    names
 }

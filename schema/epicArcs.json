@@ -1,0 +1,54 @@
+{
+  "file": "epicArcs.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "arcRestartInterval": {
+        "required": true,
+        "type": "integer"
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "iconID": {
+        "required": true,
+        "type": "integer"
+      },
+      "missions": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "agentID": {
+                "required": true,
+                "type": "integer"
+              },
+              "failMissionID": {
+                "required": false,
+                "type": "integer"
+              },
+              "nextMissions": {
+                "required": false,
+                "type": {
+                  "array": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

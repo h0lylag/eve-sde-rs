@@ -1,0 +1,76 @@
+{
+  "file": "linkWithShip.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "applyPvpFlag": {
+        "required": true,
+        "type": "bool"
+      },
+      "canRelink": {
+        "required": true,
+        "type": "bool"
+      },
+      "characterEnergyCost": {
+        "required": false,
+        "type": "float"
+      },
+      "dbuffPostLinkDuration": {
+        "required": true,
+        "type": "integer"
+      },
+      "dbuffs": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "generateCynoInhibitor": {
+        "required": true,
+        "type": "bool"
+      },
+      "keepDbuffDurationOnLinkBreak": {
+        "required": true,
+        "type": "bool"
+      },
+      "linkDuration": {
+        "required": true,
+        "type": "integer"
+      },
+      "linkEffectGraphicIDOverride": {
+        "required": true,
+        "type": "integer"
+      },
+      "linkableShipTypeListID": {
+        "required": true,
+        "type": "integer"
+      },
+      "maxLinkRange": {
+        "required": true,
+        "type": "integer"
+      },
+      "omegaOnly": {
+        "required": true,
+        "type": "bool"
+      },
+      "solarsystemInterferenceCost": {
+        "required": false,
+        "type": "float"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "file": "notificationTypes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "displayName": {
+        "required": false,
+        "type": "text"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

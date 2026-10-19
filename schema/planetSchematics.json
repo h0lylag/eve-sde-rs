@@ -1,0 +1,46 @@
+{
+  "file": "planetSchematics.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "cycleTime": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "pins": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "types": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "isInput": {
+                "required": true,
+                "type": "bool"
+              },
+              "quantity": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

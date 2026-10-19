@@ -1,0 +1,35 @@
+{
+  "file": "mercenaryTacticalOperations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "anarchyImpact": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": true,
+        "type": "text"
+      },
+      "developmentImpact": {
+        "required": true,
+        "type": "integer"
+      },
+      "dungeonID": {
+        "required": true,
+        "type": "integer"
+      },
+      "infomorphBonus": {
+        "required": true,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

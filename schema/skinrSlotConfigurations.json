@@ -1,0 +1,35 @@
+{
+  "file": "skinrSlotConfigurations.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "allowAllShips": {
+        "required": false,
+        "type": "bool"
+      },
+      "config": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      },
+      "priority": {
+        "required": true,
+        "type": "integer"
+      },
+      "ships": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "file": "npcCharacters.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "agent": {
+        "required": false,
+        "type": {
+          "object": {
+            "agentTypeID": {
+              "required": true,
+              "type": "integer"
+            },
+            "divisionID": {
+              "required": true,
+              "type": "integer"
+            },
+            "isLocator": {
+              "required": true,
+              "type": "bool"
+            },
+            "level": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "ancestryID": {
+        "required": false,
+        "type": "integer"
+      },
+      "bloodlineID": {
+        "required": true,
+        "type": "integer"
+      },
+      "careerID": {
+        "required": false,
+        "type": "integer"
+      },
+      "ceo": {
+        "required": true,
+        "type": "bool"
+      },
+      "corporationID": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "string"
+      },
+      "gender": {
+        "required": true,
+        "type": "bool"
+      },
+      "locationID": {
+        "required": false,
+        "type": "integer"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "raceID": {
+        "required": true,
+        "type": "integer"
+      },
+      "schoolID": {
+        "required": false,
+        "type": "integer"
+      },
+      "skills": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "typeID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "specialityID": {
+        "required": false,
+        "type": "integer"
+      },
+      "startDate": {
+        "required": false,
+        "type": "string"
+      },
+      "uniqueName": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

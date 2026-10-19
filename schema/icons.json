@@ -1,0 +1,15 @@
+{
+  "file": "icons.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "iconFile": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

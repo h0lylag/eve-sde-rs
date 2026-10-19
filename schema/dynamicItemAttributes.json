@@ -1,0 +1,55 @@
+{
+  "file": "dynamicItemAttributes.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "attributeIDs": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "highIsGood": {
+                "required": false,
+                "type": "bool"
+              },
+              "max": {
+                "required": true,
+                "type": "float"
+              },
+              "min": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "inputOutputMapping": {
+        "required": true,
+        "type": {
+          "array": {
+            "object": {
+              "applicableTypes": {
+                "required": true,
+                "type": {
+                  "array": "integer"
+                }
+              },
+              "resultingType": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

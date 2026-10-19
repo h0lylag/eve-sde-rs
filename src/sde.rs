@@ -1,252 +1,331 @@
-use crate::archive::{Archive, BuildInfo, Record};
-use crate::error::{PathContext, Result};
-use crate::lookup::Index;
-use crate::model::*;
-use std::collections::HashMap;
+//! [`Sde`]: the whole SDE behind one handle, with lookups by name, joins
+//! between tables, and the names the SDE leaves out.
+
+mod lookups;
+mod memory;
+pub(crate) mod naming;
+
+use crate::archive::{Archive, BuildInfo};
+use crate::error::Result;
+#[cfg(feature = "sqlite")]
+use crate::model::{
+    Attribute, Category, Constellation, Effect, Faction, Group, MarketGroup, NpcCorporation,
+    NpcStation, Region, SolarSystem, Type,
+};
+use crate::tables::Record;
+#[cfg(feature = "sqlite")]
+use crate::tables::sealed::Sealed;
+use std::borrow::Borrow;
 use std::fmt;
-use std::fs::File;
-use std::io::{BufReader, Cursor, Read, Seek};
+use std::io::{Read, Seek};
 use std::path::Path;
+#[cfg(feature = "sqlite")]
+use std::sync::{Mutex, MutexGuard, PoisonError};
 
-/// A table's key type: `u32` unless the table names another. Spelled out so
-/// the docs show `HashMap<u32, Type>`, not the private `Record::Id`.
-macro_rules! key {
-    () => {
-        u32
-    };
-    ($id:ty) => {
-        $id
-    };
-}
-
-macro_rules! tables {
-    ($($field:ident: $ty:ident $(=> $id:ty)?),* $(,)?) => {
-        /// The whole SDE in memory, English text only.
-        ///
-        /// Each table has a read-only accessor, such as [`Sde::types`].
-        /// Tables and their lookup indexes stay fixed after loading.
-        pub struct Sde {
-            build: BuildInfo,
-            unmodeled: Vec<String>,
-            pub(crate) index: Index,
-            $(
-                pub(crate) $field: HashMap<key!($($id)?), $ty>,
-            )*
-        }
-
-        /// File names of every table this crate reads.
-        pub fn modeled_files() -> &'static [&'static str] {
-            &[$(<$ty as Record>::FILE),*]
-        }
-
-        impl Sde {
-            $(
-                #[doc = concat!("Every [`", stringify!($ty), "`] record, keyed by `id`.")]
-                pub fn $field(&self) -> &HashMap<key!($($id)?), $ty> {
-                    &self.$field
-                }
-            )*
-
-            fn read_tables<R: Read + Seek>(archive: &mut Archive<R>) -> Result<Sde> {
-                Ok(Sde {
-                    build: archive.build().clone(),
-                    unmodeled: unmodeled_files(archive),
-                    index: Index::default(),
-                    $($field: archive.table::<$ty>()?,)*
-                })
-            }
-        }
-    };
-}
-
-tables! {
-    accounting_entry_types: AccountingEntryType,
-    agent_types: AgentType,
-    agents_in_space: AgentInSpace,
-    ancestries: Ancestry,
-    applied_proximity_effects: AppliedProximityEffect,
-    archetypes: Archetype,
-    bloodlines: Bloodline,
-    blueprints: Blueprint,
-    categories: Category,
-    certificates: Certificate,
-    character_attributes: CharacterAttribute,
-    character_titles: CharacterTitle => String,
-    clone_grades: CloneGrade,
-    compressible_types: CompressibleType,
-    contraband_types: ContrabandType,
-    control_tower_resources: ControlTowerResources,
-    corporation_activities: CorporationActivity,
-    corporation_role_groups: CorporationRoleGroup,
-    corporation_roles: CorporationRole,
-    dbuff_collections: DynamicBuff,
-    dogma_attribute_categories: AttributeCategory,
-    dogma_attributes: Attribute,
-    dogma_effects: Effect,
-    dogma_units: DogmaUnit,
-    dungeons: Dungeon,
-    dynamic_item_attributes: DynamicItemAttributes,
-    epic_arcs: EpicArc,
-    expert_systems: ExpertSystem,
-    factions: Faction,
-    fighter_abilities: FighterAbility,
-    fighter_abilities_by_type: FighterAbilitiesByType,
-    freelance_job_schemas: FreelanceJobSchemas,
-    graphic_material_sets: GraphicMaterialSet,
-    graphics: Graphic,
-    groups: Group,
-    icons: Icon,
-    industry_activities: IndustryActivity,
-    industry_assembly_lines: IndustryAssemblyLine,
-    industry_installation_types: IndustryInstallationType,
-    industry_modifier_sources: IndustryModifierSource,
-    industry_target_filters: IndustryTargetFilter,
-    landmarks: Landmark,
-    link_with_ship: LinkWithShip,
-    asteroid_belts: AsteroidBelt,
-    constellations: Constellation,
-    moons: Moon,
-    planets: Planet,
-    regions: Region,
-    secondary_suns: SecondarySun,
-    solar_systems: SolarSystem,
-    stargates: Stargate,
-    stars: Star,
-    market_groups: MarketGroup,
-    masteries: Mastery,
-    mercenary_tactical_operations: MercenaryTacticalOperation,
-    meta_groups: MetaGroup,
-    metenox_moon_drill: MetenoxMoonDrill,
-    military_campaign_objectives: MilitaryCampaignObjective => String,
-    military_campaigns: MilitaryCampaign => String,
-    missions: Mission,
-    notification_types: NotificationType,
-    npc_characters: NpcCharacter,
-    npc_corporation_divisions: NpcCorporationDivision,
-    npc_corporations: NpcCorporation,
-    npc_stations: NpcStation,
-    planet_resources: PlanetResource,
-    planet_schematics: PlanetSchematic,
-    proximity_traps: ProximityTrap,
-    races: Race,
-    school_map: SchoolMap,
-    schools: School,
-    ship_tree_elements: ShipTreeElement,
-    ship_tree_factions: ShipTreeFaction,
-    ship_tree_groups: ShipTreeGroup,
-    skill_plans: SkillPlan,
-    skin_licenses: SkinLicense,
-    skin_materials: SkinMaterial,
-    skinr_component_categories: SkinrComponentCategory,
-    skinr_component_point_values: SkinrComponentPointValues,
-    skinr_component_rarities: SkinrComponentRarity,
-    skinr_components: SkinrComponent,
-    skinr_slot_categories: SkinrSlotCategory,
-    skinr_slot_configurations: SkinrSlotConfiguration,
-    skinr_slot_names: SkinrSlotName,
-    skinr_slots: SkinrSlot,
-    skinr_slots_to_materials: SkinrSlotsToMaterials,
-    skinr_tier_thresholds: SkinrTierThreshold,
-    skins: Skin,
-    sovereignty_upgrades: SovereigntyUpgrade,
-    station_operations: StationOperation,
-    station_services: StationService,
-    station_standings_restrictions: StationStandingsRestriction,
-    system_dbuff_emitters: SystemDbuffEmitter,
-    system_wide_effects: SystemWideEffect,
-    translation_languages: TranslationLanguage => String,
-    type_bonuses: TypeBonuses,
-    type_dogma: TypeDogma,
-    type_elements: TypeElement,
-    type_lists: TypeList,
-    type_materials: TypeMaterials,
-    types: Type,
-}
-
-/// Code outside the crate can neither change a table nor reach a table field
-/// directly.
+/// The SDE, held in memory or in a SQLite store, with the same lookups
+/// either way.
 ///
-/// ```compile_fail,E0596
-/// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
-/// sde.types().get_mut(&34).unwrap().name = "Changed".into();
+/// ```no_run
+/// use eve_sde::Sde;
+/// use eve_sde::ids::{SystemId, TypeId};
+///
+/// let sde = Sde::load("sde.zip")?; // every table in memory
+/// # #[cfg(feature = "sqlite")]
+/// let sde = Sde::open_sqlite("sde")?; // or the newest SQLite store in a folder
+///
+/// sde.type_id("Tritanium")?; // Some(TypeId(34))
+/// sde.system_id("Jita")?; // Some(SystemId(30_000_142))
+/// sde.neighbors(SystemId(30_000_142))?; // the systems one gate away
+/// sde.name(60_003_760)?; // Some("Jita IV - Moon 4 - Caldari Navy Assembly Plant")
+/// sde.attribute_named(TypeId(587), "hiSlots")?; // Some(3.0)
+/// # Ok::<(), eve_sde::Error>(())
 /// ```
 ///
-/// ```compile_fail,E0616
-/// let mut sde = eve_sde::Sde::load("sde.zip").unwrap();
-/// sde.stargates.clear();
-/// ```
-#[cfg(doctest)]
-pub struct ReadOnlyTables;
+/// [`Sde::load`] reads every table into memory, which takes about 1.6 s and
+/// 350 MiB for a whole SDE. [`Sde::open_sqlite`], with the `sqlite` feature,
+/// opens a store that [`sqlite::import`](crate::sqlite::import) or
+/// [`sqlite::update`](crate::sqlite::update) filled, in under a millisecond
+/// and a few MiB.
+///
+/// Lookups return owned values, because a store cannot lend out its rows.
+/// An `Sde` is `Send` and `Sync`, so threads can share one through an
+/// `Arc`.
+///
+/// # Errors
+///
+/// Every lookup returns a `Result`. In memory it never fails. A SQLite store
+/// fails with [`Error::Sqlite`](crate::Error::Sqlite) if it cannot be read,
+/// and with [`Error::Decode`](crate::Error::Decode) if a record does not fit
+/// its model, which happens when CCP changes the format before this crate
+/// catches up. If the import could not name the NPC stations for that
+/// reason, the station name searches fail with
+/// [`Error::Invalid`](crate::Error::Invalid); see
+/// [Format changes](crate::sqlite#format-changes).
+pub struct Sde {
+    build: BuildInfo,
+    backend: Backend,
+}
 
-/// Sorted names of the table files that no model reads.
-fn unmodeled_files<R: Read + Seek>(archive: &Archive<R>) -> Vec<String> {
-    let mut names: Vec<String> = archive
-        .table_files()
-        .filter(|name| !modeled_files().contains(name))
-        .map(str::to_owned)
-        .collect();
-    names.sort();
-    names
+enum Backend {
+    Memory(Box<memory::Memory>),
+    #[cfg(feature = "sqlite")]
+    Sqlite(Mutex<crate::sqlite::Store>),
 }
 
 impl Sde {
-    /// Read and index an SDE ZIP from disk. Takes a couple of seconds and a
-    /// few hundred MB of memory, so load once and share the result.
+    /// Read every table of an SDE ZIP into memory, and index it.
     ///
     /// # Errors
     ///
     /// Fails if the file cannot be opened, or for any reason listed under
-    /// [`Sde::from_reader`].
-    pub fn load(path: impl AsRef<Path>) -> Result<Sde> {
-        // Not generic, so the loader is compiled in this crate, not again
-        // (and unoptimized in debug builds) in every caller's.
+    /// [`Sde::from_archive`].
+    pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         fn load(path: &Path) -> Result<Sde> {
-            let file = File::open(path).path_context("open", path)?;
-            Sde::from_reader(BufReader::new(file))
+            Sde::from_archive(&mut Archive::open(path)?)
         }
         load(path.as_ref())
     }
 
-    /// Read and index an SDE ZIP already in memory.
+    /// Read every table of an open archive into memory, and index it.
     ///
     /// # Errors
     ///
-    /// Fails for any reason listed under [`Sde::from_reader`].
-    pub fn from_bytes(bytes: &[u8]) -> Result<Sde> {
-        Sde::from_reader(Cursor::new(bytes))
+    /// Fails if a file cannot be read, a record does not parse, two records
+    /// of a table share a key, or a size limit is exceeded. A table whose
+    /// file is missing is empty.
+    pub fn from_archive<R: Read + Seek>(archive: &mut Archive<R>) -> Result<Self> {
+        let memory = memory::Memory::load(archive)?;
+        Ok(Self {
+            build: archive.build().clone(),
+            backend: Backend::Memory(Box::new(memory)),
+        })
     }
 
-    /// Read and index an SDE ZIP from any seekable source.
+    /// Open the newest SQLite store in `dir`, as
+    /// [`Store::open`](crate::sqlite::Store::open) does.
     ///
     /// # Errors
     ///
-    /// Fails if the data is not an SDE ZIP, a table is missing or damaged, a
-    /// record does not parse, two records in a table share a key, or a size
-    /// limit is exceeded.
-    pub fn from_reader<R: Read + Seek>(reader: R) -> Result<Sde> {
-        let mut archive = Archive::new(reader)?;
-        let mut sde = Sde::read_tables(&mut archive)?;
-        sde.index = Index::build(&sde);
-        Ok(sde)
+    /// Fails for the reasons listed under
+    /// [`Store::open`](crate::sqlite::Store::open).
+    #[cfg(feature = "sqlite")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+    pub fn open_sqlite(dir: impl AsRef<Path>) -> Result<Self> {
+        Ok(Self::from(crate::sqlite::Store::open(dir)?))
     }
 
-    /// The build that was loaded.
+    /// The build this SDE holds.
+    #[must_use]
     pub fn build(&self) -> &BuildInfo {
         &self.build
     }
 
-    /// Files in the archive that this crate does not read. Not empty means CCP
-    /// added a table this version does not know.
-    pub fn unmodeled_files(&self) -> &[String] {
-        &self.unmodeled
+    /// The record of `T` with this key, or `None` if there is none.
+    ///
+    /// ```no_run
+    /// use eve_sde::Sde;
+    /// use eve_sde::ids::TypeId;
+    /// use eve_sde::model::Type;
+    ///
+    /// let sde = Sde::load("sde.zip")?;
+    /// let rifter: Option<Type> = sde.get::<Type>(TypeId(587))?;
+    /// # Ok::<(), eve_sde::Error>(())
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// See [`Sde`](Sde#errors).
+    pub fn get<T: Record>(&self, key: impl Borrow<T::Key>) -> Result<Option<T>> {
+        self.get_record(key.borrow())
+    }
+
+    /// The tables in this SDE that this crate has no model for, by file
+    /// name. Not empty means CCP added a table this version does not know.
+    ///
+    /// # Errors
+    ///
+    /// See [`Sde`](Sde#errors).
+    pub fn unmodeled_files(&self) -> Result<Vec<String>> {
+        match &self.backend {
+            Backend::Memory(memory) => Ok(memory.unmodeled_files()),
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(store) => lock(store).unmodeled_files(),
+        }
+    }
+
+    /// The IDs of the records of `named` with this name, in the order the
+    /// name lookups document.
+    #[cfg_attr(
+        not(feature = "sqlite"),
+        expect(
+            clippy::unnecessary_wraps,
+            reason = "only the SQLite store can fail, and it needs the feature"
+        )
+    )]
+    fn ids_named(&self, named: Named, name: &str) -> Result<Vec<u32>> {
+        let key = name_key(name);
+        match &self.backend {
+            Backend::Memory(memory) => Ok(memory.ids_named(named, &key)),
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(store) => lock(store).ids_named(named, &key),
+        }
+    }
+
+    /// The IDs of the records under `parent`, ascending.
+    #[cfg_attr(
+        not(feature = "sqlite"),
+        expect(
+            clippy::unnecessary_wraps,
+            reason = "only the SQLite store can fail, and it needs the feature"
+        )
+    )]
+    fn children(&self, relation: Relation, parent: u32) -> Result<Vec<u32>> {
+        match &self.backend {
+            Backend::Memory(memory) => Ok(memory.children(relation, parent)),
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(store) => lock(store).children(relation, parent),
+        }
     }
 }
 
-/// Shows the build only. The tables are far too big to print.
+/// Use a store, such as one from
+/// [`Store::in_memory`](crate::sqlite::Store::in_memory), with the lookups of
+/// [`Sde`].
+#[cfg(feature = "sqlite")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sqlite")))]
+impl From<crate::sqlite::Store> for Sde {
+    fn from(store: crate::sqlite::Store) -> Self {
+        Self {
+            build: store.build().clone(),
+            backend: Backend::Sqlite(Mutex::new(store)),
+        }
+    }
+}
+
+/// Shows the build and where the tables are.
 impl fmt::Debug for Sde {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let backend = match &self.backend {
+            Backend::Memory(_) => "memory",
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(_) => "sqlite",
+        };
         f.debug_struct("Sde")
             .field("build", &self.build)
+            .field("backend", &backend)
             .finish_non_exhaustive()
+    }
+}
+
+/// The store, even if a thread panicked while it held the lock: lookups only
+/// read, so a panic cannot leave the store half changed.
+#[cfg(feature = "sqlite")]
+fn lock(store: &Mutex<crate::sqlite::Store>) -> MutexGuard<'_, crate::sqlite::Store> {
+    store.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// Where the lookups get records. The naming rules work on any source, so
+/// the SQLite import can name stations before an `Sde` exists.
+pub(crate) trait Source {
+    /// The record of `T` with this key.
+    fn get_record<T: Record>(&self, key: &T::Key) -> Result<Option<T>>;
+}
+
+impl Source for Sde {
+    fn get_record<T: Record>(&self, key: &T::Key) -> Result<Option<T>> {
+        match &self.backend {
+            Backend::Memory(memory) => Ok(memory.get(key)),
+            #[cfg(feature = "sqlite")]
+            Backend::Sqlite(store) => lock(store).get::<T>(key),
+        }
+    }
+}
+
+/// How names are compared: without surrounding whitespace, in lower case.
+pub(crate) fn name_key(name: &str) -> String {
+    name.trim().to_lowercase()
+}
+
+/// A table that the name lookups search.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum Named {
+    Type,
+    Group,
+    Category,
+    MarketGroup,
+    System,
+    Constellation,
+    Region,
+    Station,
+    Faction,
+    Corporation,
+    Attribute,
+    Effect,
+}
+
+/// Which records come first among those that share a name. Lower IDs come
+/// next in every case.
+#[cfg(feature = "sqlite")]
+pub(crate) enum Preferred {
+    /// Published records.
+    Published,
+    /// Records not marked deleted.
+    NotDeleted,
+    /// No record is preferred.
+    None,
+}
+
+#[cfg(feature = "sqlite")]
+impl Named {
+    pub(crate) fn table(self) -> &'static str {
+        match self {
+            Self::Type => <Type as Sealed>::TABLE,
+            Self::Group => <Group as Sealed>::TABLE,
+            Self::Category => <Category as Sealed>::TABLE,
+            Self::MarketGroup => <MarketGroup as Sealed>::TABLE,
+            Self::System => <SolarSystem as Sealed>::TABLE,
+            Self::Constellation => <Constellation as Sealed>::TABLE,
+            Self::Region => <Region as Sealed>::TABLE,
+            Self::Station => <NpcStation as Sealed>::TABLE,
+            Self::Faction => <Faction as Sealed>::TABLE,
+            Self::Corporation => <NpcCorporation as Sealed>::TABLE,
+            Self::Attribute => <Attribute as Sealed>::TABLE,
+            Self::Effect => <Effect as Sealed>::TABLE,
+        }
+    }
+
+    pub(crate) fn preferred(self) -> Preferred {
+        match self {
+            Self::Type | Self::Group | Self::Category => Preferred::Published,
+            Self::Corporation => Preferred::NotDeleted,
+            Self::MarketGroup
+            | Self::System
+            | Self::Constellation
+            | Self::Region
+            | Self::Station
+            | Self::Faction
+            | Self::Attribute
+            | Self::Effect => Preferred::None,
+        }
+    }
+}
+
+/// Records listed under a parent record.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) enum Relation {
+    /// The types of a group.
+    TypesInGroup,
+    /// The groups of a category.
+    GroupsInCategory,
+}
+
+impl Relation {
+    /// The child table, and the JSON path of the parent's ID in it.
+    #[cfg(feature = "sqlite")]
+    pub(crate) fn column(self) -> (&'static str, &'static str) {
+        match self {
+            Self::TypesInGroup => (<Type as Sealed>::TABLE, "$.groupID"),
+            Self::GroupsInCategory => (<Group as Sealed>::TABLE, "$.categoryID"),
+        }
     }
 }

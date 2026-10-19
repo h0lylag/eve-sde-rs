@@ -1,0 +1,188 @@
+{
+  "file": "missions.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "agentTypeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "corporationID": {
+        "required": false,
+        "type": "integer"
+      },
+      "courierMission": {
+        "required": false,
+        "type": {
+          "object": {
+            "objectiveQuantity": {
+              "required": true,
+              "type": "integer"
+            },
+            "objectiveSingleton": {
+              "required": true,
+              "type": "bool"
+            },
+            "objectiveTypeID": {
+              "required": true,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "expirationTime": {
+        "required": false,
+        "type": "integer"
+      },
+      "extraStandings": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "integer"
+              },
+              "_value": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "factionID": {
+        "required": false,
+        "type": "integer"
+      },
+      "hasStandingRewards": {
+        "required": true,
+        "type": "bool"
+      },
+      "initialAgentGiftQuantity": {
+        "required": false,
+        "type": "integer"
+      },
+      "initialAgentGiftTypeID": {
+        "required": false,
+        "type": "integer"
+      },
+      "killMission": {
+        "required": false,
+        "type": {
+          "object": {
+            "dropItemInMissionContainer": {
+              "required": false,
+              "type": "integer"
+            },
+            "dungeonID": {
+              "required": false,
+              "type": "integer"
+            },
+            "objectiveQuantity": {
+              "required": false,
+              "type": "integer"
+            },
+            "objectiveTypeID": {
+              "required": false,
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "messages": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "_key": {
+                "required": true,
+                "type": "string"
+              },
+              "de": {
+                "required": false,
+                "type": "string"
+              },
+              "en": {
+                "required": true,
+                "type": "string"
+              },
+              "es": {
+                "required": false,
+                "type": "string"
+              },
+              "fr": {
+                "required": false,
+                "type": "string"
+              },
+              "ja": {
+                "required": false,
+                "type": "string"
+              },
+              "ko": {
+                "required": false,
+                "type": "string"
+              },
+              "ru": {
+                "required": false,
+                "type": "string"
+              },
+              "zh": {
+                "required": false,
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "missionRewards": {
+        "required": false,
+        "type": {
+          "object": {
+            "bonusReward": {
+              "required": false,
+              "type": {
+                "object": {
+                  "rewardQuantity": {
+                    "required": false,
+                    "type": "integer"
+                  },
+                  "rewardTypeID": {
+                    "required": false,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "bonusTimeInterval": {
+              "required": false,
+              "type": "integer"
+            },
+            "reward": {
+              "required": false,
+              "type": {
+                "object": {
+                  "rewardQuantity": {
+                    "required": true,
+                    "type": "integer"
+                  },
+                  "rewardTypeID": {
+                    "required": false,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      }
+    }
+  }
+}

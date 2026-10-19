@@ -1,0 +1,49 @@
+{
+  "file": "typeMaterials.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "materials": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "materialTypeID": {
+                "required": true,
+                "type": "integer"
+              },
+              "quantity": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "randomizedMaterials": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "materialTypeID": {
+                "required": true,
+                "type": "integer"
+              },
+              "quantityMax": {
+                "required": true,
+                "type": "integer"
+              },
+              "quantityMin": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

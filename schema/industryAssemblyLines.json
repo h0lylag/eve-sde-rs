@@ -1,0 +1,106 @@
+{
+  "file": "industryAssemblyLines.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "activityID": {
+        "required": true,
+        "type": "integer"
+      },
+      "baseCostMultiplier": {
+        "required": false,
+        "type": "float"
+      },
+      "baseMaterialMultiplier": {
+        "required": true,
+        "type": "float"
+      },
+      "baseTimeMultiplier": {
+        "required": true,
+        "type": "float"
+      },
+      "description": {
+        "required": false,
+        "type": "string"
+      },
+      "detailsPerCategory": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "categoryID": {
+                "required": true,
+                "type": "integer"
+              },
+              "costMultiplier": {
+                "required": false,
+                "type": "float"
+              },
+              "materialMultiplier": {
+                "required": true,
+                "type": "float"
+              },
+              "timeMultiplier": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "detailsPerGroup": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "costMultiplier": {
+                "required": false,
+                "type": "float"
+              },
+              "groupID": {
+                "required": true,
+                "type": "integer"
+              },
+              "materialMultiplier": {
+                "required": true,
+                "type": "float"
+              },
+              "timeMultiplier": {
+                "required": true,
+                "type": "float"
+              }
+            }
+          }
+        }
+      },
+      "detailsPerTypeList": {
+        "required": false,
+        "type": {
+          "array": {
+            "object": {
+              "materialMultiplier": {
+                "required": true,
+                "type": "float"
+              },
+              "timeMultiplier": {
+                "required": true,
+                "type": "float"
+              },
+              "typeListID": {
+                "required": true,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "name": {
+        "required": true,
+        "type": "string"
+      }
+    }
+  }
+}

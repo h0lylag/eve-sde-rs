@@ -1,0 +1,41 @@
+{
+  "file": "skins.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "allowCCPDevs": {
+        "required": true,
+        "type": "bool"
+      },
+      "internalName": {
+        "required": true,
+        "type": "string"
+      },
+      "isStructureSkin": {
+        "required": false,
+        "type": "bool"
+      },
+      "skinMaterialID": {
+        "required": true,
+        "type": "integer"
+      },
+      "types": {
+        "required": true,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "visibleSerenity": {
+        "required": true,
+        "type": "bool"
+      },
+      "visibleTranquility": {
+        "required": true,
+        "type": "bool"
+      }
+    }
+  }
+}

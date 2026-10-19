@@ -1,0 +1,59 @@
+{
+  "file": "schools.jsonl",
+  "record": {
+    "object": {
+      "_key": {
+        "required": true,
+        "type": "integer"
+      },
+      "careerAgents": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "careerID": {
+        "required": true,
+        "type": "integer"
+      },
+      "characterDescription": {
+        "required": false,
+        "type": "text"
+      },
+      "corporationID": {
+        "required": true,
+        "type": "integer"
+      },
+      "description": {
+        "required": false,
+        "type": "text"
+      },
+      "iconID": {
+        "required": false,
+        "type": "integer"
+      },
+      "isStarterSpaceSchool": {
+        "required": false,
+        "type": "bool"
+      },
+      "name": {
+        "required": true,
+        "type": "text"
+      },
+      "raceID": {
+        "required": true,
+        "type": "integer"
+      },
+      "startingStations": {
+        "required": false,
+        "type": {
+          "array": "integer"
+        }
+      },
+      "title": {
+        "required": false,
+        "type": "text"
+      }
+    }
+  }
+}
